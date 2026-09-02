@@ -1,16 +1,24 @@
 // ==========================================
-// ⚙️ LUNAS WIRKUNG: ANKER IM DIESSEITS (V13 Ready mit Target-Kontrolle)
+// ⚠️ WICHTIG: Dieses Macro lädt das DSK‑Framework aus einem Compendium‑Macro.
+// Stelle sicher, dass die beiden UUIDs korrekt sind:
+//  - Framework‑Macro UUID (fromUuid(...))
+//  - Gaben‑Macro UUID (macroLink) — das Macro, das die Gabe steuert
+//
+// Beide UUIDs in diesem File sind bereits auf die von dir angegebenen Werte gesetzt.
+// Framework UUID:
+//   Compendium.dsk-havena-und-umland.makros.Macro.fHQ2OuDo3Fe3spBn
+// Gaben‑Macro UUID (Macro, das die Gabe steuert):
+//   Compendium.dsk-havena-und-umland.makros.Macro.9o8JAe6CkggaxRiv
 // ==========================================
 
-/*
-  Hinweis: In diesem Macro wird das DSK-Framework per fromUuid geladen.
-  Ersetze die UUID in fwMacro = await fromUuid("...") durch die UUID deines Framework-Macros in einem Compendium
-  (Format: Compendium.<packName>.makros.Macro.<id>), oder passe das Laden auf die Raw-URL des Framework-Files an.
-*/
+// ==========================================
+// ⚙️ LUNAS WIRKUNG: ANKER IM DIESSEITS (V13 Ready mit Target-Kontrolle)
+// ==========================================
 
 (async () => {
     // --- 1. SICHERHEITS-CHECK: FRAMEWORK LADEN ---
     if (typeof DSK === "undefined" || !globalThis.DSK) {
+        // Framework‑Macro (aus dem Compendium) – DA STEHT DEINE FRAMEWORK‑UUID:
         const fwMacro = await fromUuid("Compendium.dsk-havena-und-umland.makros.Macro.fHQ2OuDo3Fe3spBn");
         if (fwMacro) await fwMacro.execute();
         await new Promise(resolve => setTimeout(resolve, 150)); 
