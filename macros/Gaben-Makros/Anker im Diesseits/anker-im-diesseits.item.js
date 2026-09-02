@@ -1,4 +1,16 @@
 // ==========================================
+// ⚠️ WICHTIG: Dieses Macro lädt das DSK‑Gabenmakro aus einem Compendium‑Macro und zieht die AeP vom Akteur ab.
+// Stelle sicher, dass die beiden UUIDs korrekt sind:
+//  - Gaben‑Macro UUID (macroLink) — das Macro, das die Gabe steuert
+//
+// Tausche die UUIDs in diesem File mti deiner eigenen aus.
+// Gaben‑Macro UUID (Macro, das die Gabe steuert):
+//   Compendium.dsk-havena-und-umland.makros.Macro.9o8JAe6CkggaxRiv
+// ==========================================
+
+
+
+        // ==========================================
         // ⚙️ KONFIGURATION: GABEN-DETAILS HIER EINTRAGEN
         // ==========================================
         const gabenName = "Anker im Diesseits (Zerzal)";
