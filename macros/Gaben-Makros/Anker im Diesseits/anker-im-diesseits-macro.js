@@ -2,13 +2,10 @@
 // ⚠️ WICHTIG: Dieses Macro lädt das DSK‑Framework aus einem Compendium‑Macro.
 // Stelle sicher, dass die beiden UUIDs korrekt sind:
 //  - Framework‑Macro UUID (fromUuid(...))
-//  - Gaben‑Macro UUID (macroLink) — das Macro, das die Gabe steuert
 //
-// Beide UUIDs in diesem File sind bereits auf die von dir angegebenen Werte gesetzt.
+// Tausche die UUIDs in diesem File mti deiner eigenen aus.
 // Framework UUID:
 //   Compendium.dsk-havena-und-umland.makros.Macro.fHQ2OuDo3Fe3spBn
-// Gaben‑Macro UUID (Macro, das die Gabe steuert):
-//   Compendium.dsk-havena-und-umland.makros.Macro.9o8JAe6CkggaxRiv
 // ==========================================
 
 // ==========================================
