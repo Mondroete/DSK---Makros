@@ -1,55 +1,51 @@
-# Gaben‑Makros — Anleitung
+# Gaben‑Makros — Schnellstart & Hinweis zum externen Macro (Ein Bild)
 
-Dieses Verzeichnis enthält das DSK‑Framework, Beispiel‑Macros und Item‑Dumps für Gaben (z. B. "Anker im Diesseits").
+Diese Anleitung erklärt kurz und präzise, welches externe Macro gemeint ist und wo die UUIDs in Foundry einzutragen sind. Statt drei separater Screenshots verwenden wir ein einziges Bild, das beide relevanten Macro‑Fenster (Framework und Gaben‑Macro) nebeneinander zeigt.
 
-WICHTIG — UUID ersetzen / Compendium‑Workflow
-- Manche Macros laden das DSK‑Framework oder das eigentliche Gaben‑Macro per `fromUuid(...)` aus einem Macro im Compendium. In solchen Fällen musst du die placeholder‑UUID in der Form
-  `fromUuid("Compendium.<packName>.makros.Macro.<id>")`
-  durch die tatsächliche UUID deines Framework‑Macros oder des Gaben‑Macros ersetzen.
-- Hinweis speziell für dieses Repository: Das Item‑Script der Gabe "Anker im Diesseits" führt zur Laufzeit das zugehörige Gaben‑Macro aus — damit das funktioniert, muss dieses Gaben‑Macro in einem Macro‑Compendium gespeichert sein.
+Bild (optional einfügen):
+- `macros/Gaben-Makros/docs/framework-and-gaben.png`
 
-Empfohlene Vorgehensweise (speichere das Gaben‑Macro ins Compendium)
-1. Öffne Foundry → Compendium → erstelle (falls nötig) ein Macro‑Compendium (Type: Macro). Beispiel‑Name: `dsk-gaben-macros`.
-2. Lege im Compendium ein neues Macro an:
-   - Öffne das Compendium → Create Macro → Type = Script → Name = `Anker im Diesseits` (oder ein eindeutiger Name deiner Wahl).
-   - Füge den Script‑Inhalt (z. B. aus `macros/Gaben-Makros/Anker im Diesseits/anker-im-diesseits-macro.js`) in das Macro ein und speichere.
-3. Rechtsklicke auf den gespeicherten Macro‑Eintrag → `Copy UUID`. Du erhältst eine Zeichenkette im Format
-   `Compendium.<packName>.makros.Macro.<id>`.
-4. Öffne die Item‑JSON (oder das Macro‑JS) in diesem Repo und ersetze die placeholder‑UUID in der `fromUuid(...)`‑Zeile durch die kopierte UUID. Beispiel:
-   ```js
-   const fwMacro = await fromUuid("Compendium.dsk‑gaben‑macros.makros.Macro.ABc12DeF3gh4IjK");
-   ```
-5. Importiere das Item‑JSON (falls nötig) in Foundry (Items → Import from File) oder aktualisiere das Item, damit das eingebettete Script die korrekte UUID enthält.
+Wenn du das Bild hier noch nicht hochgeladen hast, kannst du es jetzt als Datei anhängen und ich lade es in `macros/Gaben-Makros/docs/` hoch und binde es ins README ein.
 
-Warum das Compendium nötig ist
-- Das Item‑Script ruft `fromUuid(...)` auf, um das Macro aus einem Compendium‑Eintrag zu laden und auszuführen. Befindet sich das Macro nur als lokales Script‑Macro (nicht im Compendium), kann `fromUuid` es nicht laden.
+---
 
-Alternative: Fallback‑Logik (optional)
-- Wenn du nicht jedes Mal eine UUID kopieren möchtest, kann das Macro eine Fallback‑Logik verwenden: es versucht zuerst die angegebene UUID, und falls diese nicht gefunden wird, durchsucht es alle Macro‑Compendien nach einem Macro mit dem Namen „Anker im Diesseits“ und führt dieses aus. Das erspart manuellen UUID‑Abgleich, kann aber problematisch sein, wenn mehrere Makros denselben Namen tragen.
+Kurz: Welche zwei externen Macros sind gemeint?
 
-Raw‑URL‑Variante (kein Compendium nötig)
-- Wenn du kein Compendium anlegen willst, kannst du das Macro so ändern, dass es das Framework per Raw‑URL aus diesem Repo lädt. Beispiel:
+1) Framework‑Macro (globales Hilfs‑Macro)
+- Zweck: Initialisiert das globale `DSK`‑Objekt (Hilfsfunktionen, UI‑Helper, Effekt‑API). Muss als Script‑Macro im Macro‑Compendium abgelegt werden.
+- Wo die UUID hin gehört: in Zeilen wie
+  `const fwMacro = await fromUuid("Compendium.<packName>.makros.Macro.<id>");`
+  (das ist die `fromUuid(...)`‑Zeile in den Macro‑Templates / embedded Scripts).
+- Im Screenshot ist das linke Fenster das Framework‑Macro; oben rechts im Fenster findest du das Icon zum Kopieren der UUID.
 
-```javascript
-const fwUrl = "https://raw.githubusercontent.com/Mondroete/DSK---Makros/main/macros/Gaben-Makros/Framework/dsk-framework.js";
-try {
-  await $.getScript(fwUrl);
-  await new Promise(r => setTimeout(r, 150));
-} catch (err) {
-  console.error("Framework laden fehlgeschlagen:", err);
-  return ui.notifications.error("Framework konnte nicht geladen werden.");
-}
-```
+2) Gaben‑Macro (Macro, das die Gabe steuert)
+- Zweck: Enthält die konkrete Logik der Gabe (z. B. "Anker im Diesseits"). Wird ebenfalls als Script‑Macro in einem Macro‑Compendium gespeichert.
+- Wo die UUID hin gehört: typischerweise in der Item‑Script‑Variable `macroLink` oder als `fromUuid(...)` (z. B.):
+  `const macroLink = "@UUID[Compendium.<packName>.makros.Macro.<id>]{Anker wirken}";`
+  oder
+  `const fwMacro = await fromUuid("Compendium.<packName>.makros.Macro.<id>");` (wenn das Script das Macro per UUID lädt).
+- Im Screenshot ist das rechte Fenster das Gaben‑Macro; dieses ist der Eintrag, den du als `macroLink` in den Item‑Effekt einträgst.
 
-Hinweis zum Item‑JSON
-- Falls das Item ein eingebettetes Script in `effects[0].flags.dsk.args3` enthält, ersetze dort ebenfalls die UUIDs — das Embedded‑Script wird beim Import des Items gelesen und muss ebenfalls auf die Compendium‑UUID verweisen.
+---
 
-Hinweis zum Debugging
-- Wenn das Macro nicht läuft, öffne die Browser‑Konsole (F12) und prüfe nach Fehlermeldungen. Prüfe außerdem mit Rechtsklick → `Copy UUID`, dass die verwendeten UUIDs exakt mit den Compendium‑Einträgen übereinstimmen.
+Schritt‑für‑Schritt (Kurzfassung)
+1. Framework‑Macro ins Compendium legen → Rechtsklick → Copy UUID → in `fromUuid(...)` einfügen.
+2. Gaben‑Macro ins Compendium legen → Rechtsklick → Copy UUID → in `macroLink` (oder `fromUuid`) einfügen (im embedded script `effects[0].flags.dsk.args3` oder im Macro‑Template).
+3. Item → Effekt → Reiter „Erweitert“ → Script einfügen / Macro‑Link setzen → Speichern.
+4. Test: Token auswählen → Ziele targeten → Macro ausführen → Chatkarte & ActiveEffects prüfen.
 
-Wenn du willst, kann ich automatisch:
-- die `fromUuid(...)`‑Zeile in den Files hier im Repo gegen eine von dir kopierte UUID austauschen (poste die UUID hier), oder
-- eine Fallback‑Suche per Name einbauen, oder
-- die Raw‑URL‑Lade‑Variante als Standard einsetzen.
+---
 
-Sag mir kurz, welche Variante du bevorzugst oder poste die Compendium‑UUID, dann mache ich den Commit für dich.
+Häufige Fehler & Debugging
+- "DSK is undefined": Framework‑UUID falsch oder Framework‑Macro nicht als Script gespeichert.
+- Gaben‑Macro wird nicht gefunden: `macroLink` verweist auf eine falsche oder nicht existierende UUID (prüfe Compendium + ID).
+- Tipp: Browser‑Konsole (F12) öffenen und Fehlermeldungen lesen.
+
+---
+
+Möchtest du, dass ich automatisch:
+- die Framework‑UUID (`Compendium.dsk-havena-und-umland.makros.Macro.fHQ2OuDo3Fe3spBn`) in alle Macro‑Templates setze? (Antwort: "Framework‑UUID einsetzen")
+- die `macroLink`‑UUIDs in den Item‑JSONs eintrage, wenn du die Compendium‑UUIDs der Gaben‑Makros hier postest? (Antwort: "Gaben‑UUIDs einsetzen")
+- das Screenshot‑Bild hochlade und in diese README einbinde? (Antwort: "Bild hochladen" + Dateianhang)
+
+Wenn du möchtest, lade das Bild hier hoch (als `framework-and-gaben.png`) — ich füge es dann in `macros/Gaben-Makros/docs/` ein und aktualisiere README, sodass das Bild angezeigt wird.
