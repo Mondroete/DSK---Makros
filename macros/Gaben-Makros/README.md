@@ -1,75 +1,34 @@
-# Gaben‑Makros — Anleitung mit Bildern
+# Gaben‑Makros — Anleitung
 
-Diese Anleitung erklärt Schritt für Schritt, wo du in Foundry die beiden relevanten Macro‑UUIDs findest und wo du sie einträgst. Die drei beigefügten Screenshots veranschaulichen jeden Schritt.
+Damit die Makros später die Arbeit im Spiel erleichtern, müssen 3 Schritte eingehalten werden. (Die Einrichtung der Items erfordert 2 weitere Schritte).
 
----
+**Schritt 1: Framework Makro anlegen**
+Als erstes brauchen wir ein Framework Makro, das wir in unser Kompendium ablegen (siehe Framework Ordner). Dieses initialisiert das globale Objekt und die Hilfsfunktionen.
 
-## Übersicht (Kurz)
-- Bild 1 zeigt, wo du die Framework‑Macro‑UUID kopierst.
-- Bild 2 zeigt, wo du die Gaben‑Macro‑UUID (das Macro, das die Gabe steuert) findest bzw. wie es im Macro‑Editor aussieht.
-- Bild 3 zeigt, wo im Item → Effekt → Reiter „Erweitert“ die Macro‑Verknüpfung bzw. das eingebettete Script (effects[0].flags.dsk.args3) eingefügt werden muss.
+**Schritt 2: Gaben-Makro erstellen**
+Wir kopieren das Makro für die Gaben in ein eigenes Makro Skript, damit sie jeder später nutzen kann. So gehen die gewollten Fenster auch bei der gewünschten Person auf.
 
----
+**Schritt 3: UUID für das Framework austauschen**
+Nun tauschen wir die UUID aus, da ich hier nur meine Makros abgespeichert habe und nicht die ganzen Dateien.
+![Framework – UUID kopieren](Bilder/01-framework-uuid.png)
+*Bild 1: Öffne das Framework‑Macro im Macro‑Compendium. Oben rechts findest du "Copy UUID". Ersetze die UUID im Makro durch deine eigene, sonst kommt der Fehler "DSK is undefined".*
 
-## Bilder
+**Schritt 4: Ahnengabe vorbereiten**
+Wir nehmen uns nun die Ahnengabe (das Item) vor und fügen da das Makro ein.
+![Item – Effekt → Macro‑Feld](Bilder/03-item-macro-field.png)
+*Bild 3: Öffne das Item → Reiter "Statuseffekte / Zustände" → Effekt wählen → Reiter "Erweitert". Trage hier das Macro als Link oder Skript ein.*
 
-### Bild 1 — Framework‑Macro (UUID kopieren)
-![Framework – UUID kopieren](../../doc/01-framework-uuid.png)
-*Bild 1: Öffne das Framework‑Macro im Macro‑Compendium. Oben rechts im Macro‑Fenster (kleines Icon, gelb markiert) findest du die Option "Copy UUID" — damit kopierst du die vollständige Compendium‑UUID des Framework‑Macros.*
-
-Wann das Framework gebraucht wird
-- Das Framework‑Macro initialisiert das globale `DSK`‑Objekt (Hilfsfunktionen, Effekte‑API, UI‑Helper). Viele Gaben‑Macros rufen das Framework per `fromUuid(...)` auf, z. B.:
-
-```js
-const fwMacro = await fromUuid("Compendium.<packName>.makros.Macro.<id>");
-if (fwMacro) await fwMacro.execute();
-```
-
-Wenn diese UUID falsch ist, kommt die Fehlermeldung "DSK is undefined".
+**Schritt 5: UUID für das Gaben-Makro austauschen**
+Auch hier müssen wir die UUID austauschen, damit das Item exakt dein neu erstelltes Makro findet.
+![Gaben‑Macro – Macro‑UUID](Bilder/02-gaben-macro-uuid.png)
+*Bild 2: Das Gaben-Macro als Script. Kopiere hier die UUID per Rechtsklick und füge sie als `macroLink` in das Item ein.*
 
 ---
 
-### Bild 2 — Gaben‑Macro (Macro‑UUID / Skript)
-![Gaben‑Macro – Macro‑UUID](../../doc/02-gaben-macro-uuid.png)
-*Bild 2: Das Gaben‑Macro (z. B. "Anker im Diesseits") als Script‑Macro. Hier siehst du die Zeile mit `fromUuid("Compendium....")` oder das Ziel‑Script, das später per `macroLink` im Item referenziert wird.*
-
-Hinweis
-- Die UUID dieses Macros ist diejenige, die du als `macroLink` in das Item‑Script eintragen musst (weiter unten erklärt). Kopiere die UUID per Rechtsklick → "Copy UUID" auf den Compendium‑Eintrag.
-
----
-
-### Bild 3 — Item → Effekt → Reiter "Erweitert"
-![Item – Effekt → Macro‑Feld](../../doc/03-item-macro-field.png)
-*Bild 3: Öffne das Item (z. B. "Anker im Diesseits") → Reiter "Statuseffekte / Zustände" → wähle den Effekt → Reiter "Erweitert". Unter dem Feld "Macro" oder im eingebetteten Script (effects[0].flags.dsk.args3) fügst du den `@UUID[...]`‑Link oder den Script‑String mit der `macroLink`‑Variable ein.*
-
-Was hier einzutragen ist
-- Falls dein Item das Macro per Link aufruft, setze im Script:
-
-```js
-const macroLink = "@UUID[Compendium.<packName>.makros.Macro.<id>]{Anker wirken}";
-```
-
-- Falls das Item ein eingebettetes Script (args3) verwendet, ersetze in diesem String die placeholder‑UUID durch die kopierte Compendium‑UUID.
-
----
-
-## Schritt‑für‑Schritt (kompakt)
-1. Framework‑Macro kopieren (siehe Bild 1): Öffne das Framework‑Macro → Rechtsklick/Info‑Icon → "Copy UUID". Notiere die vollständige Zeichenkette (z. B. `Compendium.meinpack.makros.Macro.abcdef...`).
-2. Gaben‑Macro erstellen/kopieren (siehe Bild 2): Lege das Gaben‑Macro als Script im Macro‑Compendium ab (Name z. B. "Anker im Diesseits"). Rechtsklick → "Copy UUID".
-3. Item → Effekt bearbeiten (siehe Bild 3): Öffne das Item → Effekte → Effekt wählen → Reiter "Erweitert" → trage entweder
-   - das `@UUID[...]`‑MacroLink in das Macro‑Feld ein, oder
-   - ersetze im embedded `effects[0].flags.dsk.args3`‑String die placeholder‑UUIDs (Framework & Gaben‑Macro) durch die kopierten Compendium‑UUIDs.
-4. Speichern und testen: Token auswählen → Ziel(e) targeten → Macro ausführen → Chatkarte & ActiveEffects prüfen.
-
----
-
-## Häufige Fehler & Lösungen
-- Fehler: "DSK is undefined"
-  - Ursache: Framework‑Macro nicht gefunden oder falsche Framework‑UUID in `fromUuid(...)`. Lösung: UUID erneut kopieren und in das Macro eintragen.
-- Fehler: Gaben‑Macro wird nicht ausgeführt / "Macro not found"
-  - Ursache: `macroLink` verweist auf falsches Compendium/ID. Lösung: Rechtsklick auf den Macro‑Eintrag → "Copy UUID" → replace.
-- Tipp: Öffne die Browser‑Konsole (F12) — Fehlermeldungen dort geben oft die genaue Ursache.
-
----
-
-Wenn du möchtest, trage ich beim Commit zusätzlich automatisch deine Framework‑UUID in alle Macro‑Templates ein oder ersetze `macroLink`‑Platzhalter, wenn du mir die Compendium‑UUIDs der Gaben‑Macros hier postest.
+**Vorgehen im Spiel:**
+Von nun an wird es so sein: 
+* Unser Spieler würfelt seine Ahnengabe.
+* Er klickt auf den Effekt **SELBST**.
+* Dann taucht etwas im Chat auf. 
+* Dort aktiviert er das eigentliche Makro. 
+* Je nach Gabe befolgt er nun die Anweisungen im Fenster.
