@@ -38,7 +38,16 @@ Auch hier müssen wir die UUID austauschen, damit das Item exakt dein neu erstel
 * Dort aktiviert er das eigentliche Makro.
 * Je nach Gabe befolgt er nun die Anweisungen im Fenster.
 
+
 -----------------------------------------------------------------------------------------------------------------------
+
+
+# Framework
+es ist die Übersichtensammlung der Effekte, ein Baukasten aus dem sich ein Effekt zusammen setzt.
+
+
+-----------------------------------------------------------------------------------------------------------------------
+
 
 # Framework Wecker
 er dient dazu nach die effekte wieder zu überwachen, falls eine Runde mit laufenden Effekten beendet wurde.
