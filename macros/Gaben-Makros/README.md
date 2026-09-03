@@ -37,3 +37,8 @@ Auch hier müssen wir die UUID austauschen, damit das Item exakt dein neu erstel
 * Dann taucht etwas im Chat auf.
 * Dort aktiviert er das eigentliche Makro.
 * Je nach Gabe befolgt er nun die Anweisungen im Fenster.
+
+-----------------------------------------------------------------------------------------------------------------------
+
+# Framework Wecker
+er dient dazu nach die effekte wieder zu überwachen, falls eine Runde mit laufenden Effekten beendet wurde.
