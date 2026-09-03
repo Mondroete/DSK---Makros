@@ -1,0 +1,95 @@
+{
+  "name": "Blick in die Zwischenwelt",
+  "img": "https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/DSK/Allgemein_Glaubenssymbole/Zerzal.webp",
+  "effects": [
+    {
+      "name": "Blick in die Zwischenwelt",
+      "img": "https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/DSK/Allgemein_Glaubenssymbole/Zerzal.webp",
+      "origin": "Item.qo7OXwoLsMmLvrYW",
+      "flags": {
+        "dsk": {
+          "value": null,
+          "description": "",
+          "auto": null,
+          "manual": 0,
+          "hideOnToken": false,
+          "hidePlayers": false,
+          "customDuration": "",
+          "advancedFunction": "2",
+          "resistRoll": "",
+          "args3": "// ==========================================\n// ⚙️ KONFIGURATION: GABEN-DETAILS HIER EINTRAGEN\n// ==========================================\nconst gabenName = \"Blick in die Seele (Zerzal)\";\nconst aepKosten = 4;\nconst macroLink = \"@UUID[Compendium.dsk-havena-und-umland.makros.Macro.gxZYosqFL3ogGhdQ]{Blick wirken}\";\nconst iconBild = \"https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/systems/dsk/icons/categories/ahnengabe.webp\";\n// ==========================================\n\n(async () => {\n    // Framework laden\n    if (typeof DSK === \"undefined\" || !globalThis.DSK) {\n        const fwMacro = await fromUuid(\"Compendium.dsk-havena-und-umland.makros.Macro.fHQ2OuDo3Fe3spBn\");\n        if (fwMacro) await fwMacro.execute();\n        await new Promise(resolve => setTimeout(resolve, 150)); \n    }\n    const DSK_FW = globalThis.DSK || DSK; \n\n    // Akteur ermitteln\n    let wirkenderActor = canvas.tokens.controlled[0]?.actor || game.user.character;\n    if (!wirkenderActor) return ui.notifications.warn(\"Luna sagt 🌙: Kein Wirkender gefunden!\");\n    \n    const currentAeP = foundry.utils.getProperty(wirkenderActor, \"system.stats.AeP.value\") || 0;\n    \n    if (currentAeP < aepKosten) {\n        await wirkenderActor.update({ \"system.stats.AeP.value\": 0 });\n        return ChatMessage.create({\n            speaker: { alias: \"System\" },\n            content: `<div class=\"dskbox1\"><b>Fehlschlag</b></div><div class=\"dskbox2\">Nicht genug AeP! (Verfügbar: ${currentAeP}/${aepKosten})</div>`\n        });\n    }\n\n    // QS speichern (Flag löschen wir erst bei Erfolg!)\n    let ermittelteQS = 1;\n    if (typeof testData !== \"undefined\") ermittelteQS = Number(testData?.result?.QL || testData?.qualityStep || 1);\n    await wirkenderActor.setFlag(\"world\", \"letzteGabenQS\", ermittelteQS);\n    \n    await wirkenderActor.update({ \"system.stats.AeP.value\": currentAeP - aepKosten });\n    \n    await ChatMessage.create({\n        speaker: { alias: \"System\" },\n        content: `\n            <div style=\"font-family: 'Signika', sans-serif;\">\n                <div class=\"dskbox1\"><p><img src=\"${iconBild}\" style=\"width:28px; border:none;\"> <b>Wirkungsbeginn</b></p><b>${gabenName}</b></div>\n                <div class=\"dskbox2\" style=\"margin-top:10px; text-align: center;\">\n                    <p><b>${wirkenderActor.name}</b> konzentriert sich auf die Seele des Ziels.</p>\n                    <hr>\n                    <p style=\"color: #76301b;\">Kosten: ${aepKosten} AeP abgezogen.</p>\n                    <hr>\n                    <span style=\"font-size: 15px;\">${macroLink}</span>\n                </div>\n            </div>\n        `\n    });\n})();",
+          "onRemove": ""
+        }
+      },
+      "_id": "hKxJ6W6X7dsWjJQT",
+      "type": "base",
+      "system": {},
+      "changes": [],
+      "disabled": false,
+      "duration": {
+        "startTime": 1782131407,
+        "combat": null,
+        "seconds": null,
+        "rounds": null,
+        "turns": null,
+        "startRound": null,
+        "startTurn": null
+      },
+      "description": "",
+      "tint": "#ffffff",
+      "transfer": true,
+      "statuses": [],
+      "sort": 0,
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "dsk",
+        "systemVersion": "4.2.8",
+        "lastModifiedBy": null
+      }
+    }
+  ],
+  "type": "ahnengabe",
+  "system": {
+    "description": {
+      "value": "<p>„Schließe ein Auge und drehe die Schnurrhaare so weit vor wie es geht. Versuche mit deinem Geist hinter das Tuch zu greifen. Nun kannst du die Schatten der Zwischenwelt erblicken. Aber sei gewarnt: Es gibt Dinge, die nicht gesehen werden sollten.“</p><p>– Kieran Nachtgesicht</p>",
+      "gminfo": ""
+    },
+    "characteristic1": "kl",
+    "characteristic2": "in",
+    "effect": "Der Blick des Zerzalkindes durchdringt die Barriere zwischen Dies- und Jenseits. Es kann nun Geister sehen, als wären sie körperlich anwesend. Mit dieser Gabe kann es zudem alles sehen, was einem normalen Auge verborgen bleibt, beispielsweise Unsichtbare, Feen, Kobolde oder andere Wesenheiten. Es kann jedoch nicht durch Dinge hindurch blicken, die auch im Diesseits seinen Blick verstellen würden, also beispielsweise Wände, Büsche usw.",
+    "effectFormula": "",
+    "duration": "QS Minuten",
+    "AeP": "4",
+    "distribution": "Zerzal (Jenseits)",
+    "StF": "B",
+    "targetCategory": "Erwachte",
+    "range": "selbst",
+    "level": 0,
+    "resist": "-"
+  },
+  "folder": "Bfgy2Rjd3j1lTvPi",
+  "flags": {},
+  "_stats": {
+    "compendiumSource": "Item.qo7OXwoLsMmLvrYW",
+    "duplicateSource": null,
+    "exportSource": {
+      "worldId": "dsk-zum-erstellen",
+      "uuid": "Item.TQjRUdKaHYTBeTa3",
+      "coreVersion": "13.351",
+      "systemId": "dsk",
+      "systemVersion": "4.2.8"
+    },
+    "coreVersion": "13.351",
+    "systemId": "dsk",
+    "systemVersion": "4.2.8",
+    "createdTime": 1787737759332,
+    "modifiedTime": 1787737807112,
+    "lastModifiedBy": "9CRVH1u8nNgMxGRR"
+  },
+  "ownership": {
+    "default": 0
+  }
+}

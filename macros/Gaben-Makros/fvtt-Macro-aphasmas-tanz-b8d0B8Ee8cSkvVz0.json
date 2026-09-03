@@ -1,0 +1,30 @@
+{
+  "name": "Aphasmas Tanz",
+  "type": "script",
+  "author": "9CRVH1u8nNgMxGRR",
+  "img": "https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/DSK/Allgemein_Glaubenssymbole/Aphasma.webp",
+  "scope": "global",
+  "command": "// ==========================================\n// ⚙️ LUNAS WIRKUNG: APHASMAS TANZ (V13 Ready - FW Modus)\n// ==========================================\n\n(async () => {\n    const fwMacro = await fromUuid(\"Compendium.dsk-havena-und-umland.makros.Macro.fHQ2OuDo3Fe3spBn\");\n    if (fwMacro) await fwMacro.execute();\n    const DSK_FW = globalThis.DSK || DSK; \n\n    const gabenName = \"Aphasmas Tanz (Aphasma)\";\n    const ahne = \"aphasma\";\n\n    // Wirkungsende registrieren\n    if (DSK_FW.EffektEnde) {\n        DSK_FW.EffektEnde.Register(\"aphasmastanz\", gabenName, \"Die Wirkung ist abgelaufen und die Erschwernisse sind verflogen.\");\n    }\n\n    // --- AKTEUR & QS ---\n    const casterActor = canvas.tokens.controlled[0]?.actor || game.user.character;\n    const qs = casterActor.getFlag(\"world\", \"letzteGabenQS\") || 1;\n    await casterActor.unsetFlag(\"world\", \"letzteGabenQS\");\n\n    // --- SCHLEIER-CHECK ---\n    const hatSchleier = casterActor.effects.some(e => (e.name || e.label || \"\").toLowerCase().includes(\"aphasmas schleier\"));\n    if (!hatSchleier) {\n        return ChatMessage.create({\n            speaker: { alias: \"System\" },\n            content: `\n                ${DSK_FW.UI.Header(gabenName, DSK_FW.Symbol(\"aphasma\"))}\n                <div class=\"dskbox2\" style=\"margin-top:10px; text-align:center; color:#B30000; font-weight:bold;\">\n                    Kein geweihter Schleier getragen! Der Tanz verfehlt seine Wirkung.\n                </div>\n            `\n        });\n    }\n\n    // --- ZIELE HOLEN (Foundry Targets) ---\n    const targets = Array.from(game.user.targets);\n    if (targets.length === 0) return ui.notifications.warn(\"Bitte wähle Ziele per Target aus!\");\n\n    const erschwernis = qs * 2;\n    const erfolge = [];\n    const fehler = [];\n\n    // --- EFFEKTE ANWENDEN ---\n    for (let t of targets) {\n        if (!t.actor) continue;\n\n        if (!DSK_FW.Effekt.CheckTarget(t.actor, \"erwachte\")) {\n            fehler.push({ name: t.name, grund: \"Kein Erwachter\" });\n            continue;\n        }\n\n        const desc = `Erschwernis von ${erschwernis} FW auf Willenskraft und Sinnesschärfe.`;\n        \n        await DSK_FW.Effekt.Anwenden({\n            name: gabenName,\n            ahne: ahne,\n            beschreibung: desc,\n            gabeZiel: \"erwachte\",\n            qs: qs,\n            ziel: t.actor\n        });\n\n        const eff = t.actor.effects.find(e => e.name === gabenName);\n        if (eff) {\n            // HIER FW MODUS: -erschwernis (ohne +)\n            await eff.update({\n                changes: [\n                    { key: \"system.skillModifiers.FW\", mode: 2, value: `Willenskraft -${erschwernis}`, priority: 20 },\n                    { key: \"system.skillModifiers.FW\", mode: 2, value: `Sinnesschärfe -${erschwernis}`, priority: 20 }\n                ]\n            });\n            erfolge.push(t.name);\n        }\n    }\n\n    // --- WHISPER & CHAT-AUSGABE ---\n    let ownerIds = new Set(game.users.filter(u => u.isGM).map(u => u.id));\n    [...targets, canvas.tokens.controlled[0]].forEach(t => {\n        if(t?.actor) Object.entries(t.actor.ownership || {}).filter(([id, lvl]) => lvl === 3).forEach(([id]) => ownerIds.add(id));\n    });\n\n    const erfolgHtml = erfolge.length > 0 \n        ? `<div style=\"margin-top: 10px; margin-bottom: 10px;\">\n             <p style=\"margin-bottom: 5px;\"><span style=\"color:#18940F; font-weight:bold;\">Erfolg</span></p>\n             <ul class=\"dsklist\" style=\"margin-top:0; font-weight:normal;\">\n                 ${erfolge.map(n => `<li>${n}</li>`).join(\"\")}\n             </ul>\n           </div>` : ``;\n\n    const fehlschlagHtml = fehler.length > 0\n        ? `<div style=\"margin-top: 10px; margin-bottom: 10px;\">\n             <p style=\"margin-bottom: 5px;\"><span style=\"color:#B30000; font-weight:bold;\">Fehlschlag</span></p>\n             <ul class=\"dsklist\" style=\"margin-top:0; font-weight:normal;\">\n                 ${fehler.map(f => `<li>${f.name} (${f.grund})</li>`).join(\"\")}\n             </ul>\n           </div>` : ``;\n\n    await ChatMessage.create({\n        speaker: { alias: \"System\" },\n        whisper: Array.from(ownerIds).filter(id => game.users.get(id)),\n        content: `\n            <div style=\"font-family: 'Signika', sans-serif;\">\n                ${DSK_FW.UI.Header(gabenName, DSK_FW.Symbol(ahne))}\n                <div class=\"dskbox2\" style=\"margin-top:10px;\">\n                    <p style=\"margin-bottom: 5px;\"><b>Gabenwirkung:</b></p>\n                    <p style=\"margin-top:0;\">Erschwernis von ${erschwernis} FW auf Willenskraft und Sinnesschärfe.</p>\n                    ${erfolgHtml}\n                    ${fehlschlagHtml}\n                </div>\n            </div>\n        `\n    });\n})();",
+  "folder": "13pY61Dh0lQoEeW8",
+  "flags": {},
+  "_stats": {
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": {
+      "worldId": "dsk-zum-erstellen",
+      "uuid": "Macro.b8d0B8Ee8cSkvVz0",
+      "coreVersion": "13.351",
+      "systemId": "dsk",
+      "systemVersion": "4.2.8"
+    },
+    "coreVersion": "13.351",
+    "systemId": "dsk",
+    "systemVersion": "4.2.8",
+    "createdTime": 1788443949993,
+    "modifiedTime": 1788443949993,
+    "lastModifiedBy": "9CRVH1u8nNgMxGRR"
+  },
+  "ownership": {
+    "default": 0
+  }
+}

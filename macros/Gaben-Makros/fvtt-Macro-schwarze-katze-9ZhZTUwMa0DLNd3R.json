@@ -1,0 +1,30 @@
+{
+  "folder": "13pY61Dh0lQoEeW8",
+  "name": "Schwarze Katze",
+  "type": "script",
+  "author": "9CRVH1u8nNgMxGRR",
+  "img": "https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/modules/dsk-core/icons/journal/image-440.webp",
+  "scope": "global",
+  "command": "// 1. QS holen\nconst qsWert = Number(testData.result?.QL || testData.qualityStep || 0);\nconst symbolPfad = \"https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/modules/dsk-core/icons/journal/image-440.webp\";\nconst infoBildPfad = \"https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/DSK/Allgemein/system-dsk-info2.webp\";\nconst akteurName = actor.name;\n\nif (qsWert > 0) {\n    const zielToken = game.user.targets.first();\n    const zielActor = zielToken?.actor;\n\n    if (zielActor) {\n        const maxSchips = zielActor.system.stats.schips.max || 0;\n        const schipsAbzug = Math.round(qsWert / 2);\n\n        if (maxSchips > 0) {\n            // Effekt erstellen\n            const effektDaten = {\n                name: \"Schwarze Katze\",\n                icon: symbolPfad,\n                duration: { rounds: null, startTime: game.time.worldTime },\n                changes: [\n                    { key: \"system.stats.schips.gearmodifier\", mode: 2, value: -schipsAbzug },\n                    { key: \"system.stats.at.gearmodifier\", mode: 2, value: -1 } \n                ]\n            };\n            await zielActor.createEmbeddedDocuments(\"ActiveEffect\", [effektDaten]);\n\n            ChatMessage.create({\n                content: `\n                <div style=\"font-family: 'Signika', sans-serif;\">\n                    <div style=\"background: linear-gradient(90deg, rgba(25, 20, 55, 0.95) 0%, rgba(45, 35, 90, 0.6) 50%, rgba(45, 35, 90, 0.1) 100%); color: #ffffff; font-weight: bold; padding: 8px 12px; border-radius: 4px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #777;\">\n                        <span>⚙️ Aphasma-Gabe</span>\n                        <img src=\"${symbolPfad}\" style=\"width: 24px; height: 24px; border: none;\">\n                    </div>\n                    <div style=\"text-align: center; font-weight: bold; margin: 8px 0; border-bottom: 1px solid #ccc; padding-bottom: 4px;\">\n                        Aktiver Effekt: Schwarze Katze\n                    </div>\n                    <div style=\"display: flex; align-items: flex-start; gap: 10px; margin-top: 5px;\">\n                        <img src=\"${infoBildPfad}\" style=\"width: 80px; height: auto; border-radius: 4px; border: none;\">\n                        <div style=\"line-height: 1.4; font-size: 0.95em;\">\n                            🐈‍⬛ <b>${akteurName}</b> hat <b>${zielToken.name}</b> heimgesucht.<br>\n                            Verlust: <b>${schipsAbzug} Schicksalspunkt(e)</b> und <b>1 Aktiver Punkt</b>.<br>\n                            ⏳ <b>Dauer:</b> Bis zur nächsten langen Rast.\n                        </div>\n                    </div>\n                </div>`,\n                speaker: ChatMessage.getSpeaker({ actor: actor })\n            });\n        } else {\n            // Rote Box für Fehlgeschlagen\n            ChatMessage.create({\n                content: `\n                <div style=\"font-family: 'Signika', sans-serif;\">\n                    <div style=\"background: #8b0000; color: white; font-weight: bold; padding: 8px; border-radius: 4px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #777;\">\n                        <span>⚙️ Ahnengabe misslungen</span>\n                        <img src=\"${symbolPfad}\" style=\"width: 24px; height: 24px; border: none;\">\n                    </div>\n                    <div style=\"margin-top: 8px;\">\n                        ${zielToken.name} besitzt keine Schicksalspunkte.\n                    </div>\n                </div>`,\n                speaker: ChatMessage.getSpeaker({ actor: actor })\n            });\n        }\n    } else {\n        ui.notifications.warn(\"Bitte wähle ein Ziel-Token aus.\");\n    }\n}",
+  "flags": {},
+  "_stats": {
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": {
+      "worldId": "dsk-zum-erstellen",
+      "uuid": "Macro.9ZhZTUwMa0DLNd3R",
+      "coreVersion": "13.351",
+      "systemId": "dsk",
+      "systemVersion": "4.2.8"
+    },
+    "coreVersion": "13.351",
+    "systemId": "dsk",
+    "systemVersion": "4.2.8",
+    "createdTime": 1788443949993,
+    "modifiedTime": 1788443949993,
+    "lastModifiedBy": "9CRVH1u8nNgMxGRR"
+  },
+  "ownership": {
+    "default": 0
+  }
+}

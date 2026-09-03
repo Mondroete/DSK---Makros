@@ -1,0 +1,95 @@
+{
+  "name": "Geisterschrecken",
+  "img": "https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/DSK/Allgemein_Glaubenssymbole/Zerzal.webp",
+  "effects": [
+    {
+      "name": "Geisterschrecken",
+      "img": "icons/svg/aura.svg",
+      "origin": "Actor.m4lI1pf9uG0ZHLTg.Item.1qT6W6L2qMKTN7k3",
+      "flags": {
+        "dsk": {
+          "value": null,
+          "description": "",
+          "auto": null,
+          "manual": 0,
+          "hideOnToken": false,
+          "hidePlayers": false,
+          "customDuration": "",
+          "advancedFunction": "2",
+          "resistRoll": "",
+          "args3": "// ==========================================\n        // ⚙️ KONFIGURATION: GABEN-DETAILS HIER EINTRAGEN\n        // ==========================================\n        const gabenName = \"Geisterschrecken (Zerzal)\";\n        const aepKosten = 4;\n        const macroLink = \"@UUID[Compendium.dsk-havena-und-umland.makros.Macro.wkXaXyIxADqMpa8r]{Geisterschrecken wirken}\";\n        const iconBild = \"https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/systems/dsk/icons/categories/ahnengabe.webp\";\n        // ==========================================\n        \n        (async () => {\n            // --- 1. SICHERHEITS-CHECK: FRAMEWORK LADEN ---\n            if (typeof DSK === \"undefined\" || !globalThis.DSK) {\n                const fwMacro = await fromUuid(\"Compendium.dsk-havena-und-umland.makros.Macro.1tBOnhW6okOKlMd4\");\n                if (fwMacro) await fwMacro.execute();\n                await new Promise(resolve => setTimeout(resolve, 150)); \n            }\n        \n            if (typeof DSK === \"undefined\" && !globalThis.DSK) {\n                return ui.notifications.error(\"Luna sagt 🌙: Das DSK-Framework konnte nicht geladen werden!\");\n            }\n            \n            // --- 2. WIRKENDEN AKTEUR ERMITTELN ---\n            let wirkenderActor = null;\n            if (typeof actor !== \"undefined\" && actor) {\n                wirkenderActor = actor; \n            } else if (typeof testData !== \"undefined\" && testData && testData.speaker) {\n                wirkenderActor = game.actors.get(testData.speaker.actor);\n            }\n            if (!wirkenderActor) wirkenderActor = canvas.tokens.controlled[0]?.actor;\n            if (!wirkenderActor) wirkenderActor = game.user.character;\n        \n            if (!wirkenderActor) {\n                return ui.notifications.warn(\"Luna sagt 🌙: Ich konnte den Wirkenden nicht finden!\");\n            }\n            \n            // --- 3. AKTUELLE AeP AUSLESEN & PRÜFEN ---\n            const currentAeP = foundry.utils.getProperty(wirkenderActor, \"system.stats.AeP.value\") || 0;\n            \n            let htmlInhalt = \"\";\n            let topHeader = \"\";\n        \n            if (currentAeP < aepKosten) {\n                topHeader = \"Fehlschlag\";\n                await wirkenderActor.update({ \"system.stats.AeP.value\": 0 });\n                \n                htmlInhalt = `\n                    <p style=\"margin-bottom: 8px;\"><b>${wirkenderActor.name}</b> hat versucht, die Gabe zu wirken.</p>\n                    <hr style=\"margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;\">\n                    <p style=\"margin-bottom: 8px; color: #8b0000;\"><b>Fehlschlag!</b> Die Kraft reicht nicht aus.</p>\n                    <p style=\"margin-bottom: 8px;\">Die restlichen <b>${currentAeP} AeP</b> wurden verbraucht, aber die Gabe schlägt fehl.</p>\n                `;\n            } else {\n                topHeader = \"Wirkungsbeginn\"; \n                \n                let ermittelteQS = 1;\n                if (typeof testData !== \"undefined\") {\n                    ermittelteQS = Number(testData?.result?.QL || testData?.qualityStep || 1);\n                }\n                await wirkenderActor.setFlag(\"world\", \"letzteGabenQS\", ermittelteQS);\n                await wirkenderActor.update({ \"system.stats.AeP.value\": currentAeP - aepKosten });\n                \n                htmlInhalt = `\n                    <p style=\"margin-bottom: 8px;\"><b>${wirkenderActor.name}</b> hat die Gabe gewirkt.</p>\n                    <hr style=\"margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;\">\n                    <p style=\"margin-bottom: 8px; color: #76301b;\"><b>Kosten:</b> Die AeP in Höhe von <b>${aepKosten}</b> sind abgezogen worden.</p>\n                    <hr style=\"margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;\">\n                    <p style=\"margin-bottom: 8px;\">Bitte klicke hier, um die Aura zu entfesseln:</p>\n                    <span style=\"font-size: 15px;\">${macroLink}</span>\n                `;\n            }\n            \n            // --- 4. CHAT-NACHRICHT BAUEN & SENDEN ---\n            const contentHtml = `\n                <div style=\"font-family: 'Signika', sans-serif;\">\n                    <div class=\"dskbox1\">\n                        <p style=\"display:flex; gap:8px; align-items:center; margin:0; white-space:nowrap;\">\n                            <img src=\"${iconBild}\" style=\"width:28px; height:28px; border:none; background:transparent; flex-shrink:0;\">\n                            <b style=\"font-size: 1.05em;\">${topHeader}</b>\n                        </p>\n                        <p style=\"font-weight:bold; margin-top:6px; margin-bottom:0;\">${gabenName}</p>\n                    </div>\n                    <div class=\"dskbox2\" style=\"margin-top:10px; text-align: center;\">\n                        ${htmlInhalt}\n                    </div>\n                </div>\n            `;\n            \n            await ChatMessage.create({\n                speaker: { alias: \"System\" },\n                content: contentHtml\n            });\n        })();",
+          "onRemove": ""
+        }
+      },
+      "_id": "LwJ8oHdaRmtY8VgA",
+      "type": "base",
+      "system": {},
+      "changes": [],
+      "disabled": false,
+      "duration": {
+        "startTime": null,
+        "combat": null,
+        "seconds": null,
+        "rounds": null,
+        "turns": null,
+        "startRound": null,
+        "startTurn": null
+      },
+      "description": "",
+      "tint": "#ffffff",
+      "transfer": true,
+      "statuses": [],
+      "sort": 0,
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "dsk",
+        "systemVersion": "4.2.8",
+        "lastModifiedBy": null
+      }
+    }
+  ],
+  "type": "ahnengabe",
+  "system": {
+    "description": {
+      "value": "<p>„Plustere deinen Schwanz auf und mache einen Buckel. Funkel den Geist wütend an und rufe ‚Fürchte mich, ich bin ein Kind Zerzals!‘ Furcht wird die verlorene Seele erfassen.“</p><p>– Kieran Nachtgesicht</p>",
+      "gminfo": ""
+    },
+    "characteristic1": "mu",
+    "characteristic2": "ch",
+    "effect": "Das Zerzalkind flößt dem Geist einen gehörigen Schrecken ein. Pro QS erhält der Geist 1 Stufe Furcht.",
+    "effectFormula": "",
+    "duration": "QS x 3 Minuten",
+    "AeP": "4",
+    "distribution": "Zerzal (Jenseits)",
+    "StF": "A",
+    "targetCategory": "Geister",
+    "range": "16 Schritt",
+    "level": 0,
+    "resist": "sk"
+  },
+  "folder": "Bfgy2Rjd3j1lTvPi",
+  "flags": {},
+  "_stats": {
+    "compendiumSource": "Item.fFl9SlHcHVx7jezV",
+    "duplicateSource": null,
+    "exportSource": {
+      "worldId": "dsk-zum-erstellen",
+      "uuid": "Item.5KNm2R6slA2SE09v",
+      "coreVersion": "13.351",
+      "systemId": "dsk",
+      "systemVersion": "4.2.8"
+    },
+    "coreVersion": "13.351",
+    "systemId": "dsk",
+    "systemVersion": "4.2.8",
+    "createdTime": 1787737813806,
+    "modifiedTime": 1787737813806,
+    "lastModifiedBy": "9CRVH1u8nNgMxGRR"
+  },
+  "ownership": {
+    "default": 0
+  }
+}

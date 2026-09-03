@@ -1,0 +1,30 @@
+{
+  "folder": "13pY61Dh0lQoEeW8",
+  "name": "Lange Tasthaare",
+  "type": "script",
+  "author": "9CRVH1u8nNgMxGRR",
+  "img": "https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/DSK/Allgemein_Glaubenssymbole/Zerzal.webp",
+  "scope": "global",
+  "command": "// ==========================================\n// ⚙️ LUNAS WIRKUNG: LANGE TASTHAARE (Ausführung)\n// ==========================================\n\n(async () => {\n    // --- 1. FRAMEWORK LADEN ---\n    const fwMacro = await fromUuid(\"Compendium.dsk-havena-und-umland.makros.Macro.fHQ2OuDo3Fe3spBn\");\n    if (fwMacro) { await fwMacro.execute(); }\n\n    const DSK_FW = globalThis.DSK || DSK;\n    if (typeof DSK_FW === \"undefined\" || !DSK_FW.Sicht) return ui.notifications.error(\"Luna sagt 🌙: Framework fehlt oder ist veraltet!\");\n\n    const gabenName = \"Lange Tasthaare\";\n    const ahne = \"Zerzal\";\n    const finalEffektName = `${gabenName} (${ahne})`;\n    const iconBild = DSK_FW.Symbol(ahne);\n\n    if (DSK_FW.EffektEnde) {\n        DSK_FW.EffektEnde.Register(\"zerzalTasthaare\", finalEffektName, \"Die übernatürliche Wahrnehmung der Tasthaare verblasst wieder. Die Entdeckungsmodi normalisieren sich.\");\n    }\n\n    // --- 2. CASTER ERMITTELN ---\n    let casterActor = canvas.tokens.controlled[0]?.actor || game.user.character;\n    if (!casterActor) casterActor = game.actors.find(a => a.getFlag(\"world\", \"letzteGabenQS\") !== undefined);\n    if (!casterActor) {\n        for (let t of canvas.tokens.placeables) {\n            if (t.actor && t.actor.getFlag(\"world\", \"letzteGabenQS\") !== undefined) { casterActor = t.actor; break; }\n        }\n    }\n    if (!casterActor) return ui.notifications.warn(\"Luna sagt 🌙: Kein Wirkender gefunden!\");\n\n    const qsWert = Number(casterActor.getFlag(\"world\", \"letzteGabenQS\") || 1);\n    const alteMessageId = casterActor.getFlag(\"world\", \"letzteGabenMessageId\");\n\n    // --- 3. BERECHNUNGEN ---\n    const reichweite = Number(qsWert); \n    const dauerMinuten = reichweite * 3; \n\n    await casterActor.unsetFlag(\"world\", \"letzteGabenQS\");\n    await casterActor.unsetFlag(\"world\", \"letzteGabenMessageId\");\n\n    let alterEffekt = casterActor.effects.find(e => (e.name || e.label) === finalEffektName);\n    if (alterEffekt) await alterEffekt.delete(); \n\n    // --- 4. EFFEKT AUF DEN WIRKENDEN ANWENDEN ---\n    const angelegteEffekte = await casterActor.createEmbeddedDocuments(\"ActiveEffect\", [{\n        name: finalEffektName,\n        icon: iconBild,\n        img: iconBild,\n        duration: { minutes: dauerMinuten },\n        description: `Besitzt in ${reichweite} Schritt Umkreis erweiterte Entdeckermodi: Dunkelsicht, Unsichtbares spüren & Erschütterungssinn.`,\n        flags: { dsk: { ahne: ahne } }\n    }]);\n\n    // --- 5. SICHT ÜBER FRAMEWORK MODIFIZIEREN ---\n    if (angelegteEffekte && angelegteEffekte.length > 0) {\n        const idDunkelsicht = DSK_FW.Sicht.GetDunkelsichtId();\n        \n        // Block 15 aus dem Framework übernimmt hier die komplette Arbeit!\n        await DSK_FW.Sicht.Modifiziere(casterActor, angelegteEffekte[0], [\n            { id: idDunkelsicht, range: reichweite },\n            { id: \"feelTremor\", range: reichweite },\n            { id: \"senseInvisibility\", range: reichweite }\n        ]);\n    }\n\n    // --- 6. CHAT NACHRICHT GENERIEREN ---\n    const casterName = DSK_FW.ResolveTokenName(casterActor);\n    const thinStyle = 'style=\"font-weight: 300; font-size: 0.9em; opacity: 0.8;\"';\n\n    const successContent = `\n        <div style=\"font-family: 'Signika', sans-serif;\">\n            ${DSK_FW.UI.Header(finalEffektName, iconBild)}\n            <div class=\"dskbox2\" style=\"margin-top:10px;\">\n                <p><b>${casterName}</b> sträubt die Tasthaare und nimmt feinste Strömungen wahr.</p>\n                <hr style=\"margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;\">\n                <p style=\"margin-bottom: 8px;\">\n                    Das Zerzalkind kann seine Umgebung in einem Umkreis von <b>${reichweite} Schritt</b> tastend wahrnehmen, ohne sie zu berühren. Es kann sich so auch in völliger Dunkelheit orientieren.\n                </p>\n                <div style=\"background:rgba(0,0,0,0.05); border:1px solid #a89f91; padding:6px; border-radius:3px; margin-bottom: 8px;\">\n                    <p style=\"font-weight:bold; color:#333; margin-bottom:5px;\">Aktivierte Entdeckermodi:</p>\n                    <p style=\"font-size:0.9em; margin:0;\">\n                        • Dunkelsicht (Stufe 3)<br>\n                        • Erschütterung spüren<br>\n                        • Unsichtbares spüren\n                    </p>\n                </div>\n                <hr style=\"margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;\">\n                <p style=\"text-align:center; font-weight:bold;\">Wirkungsdauer:<br>${dauerMinuten} Minuten <span ${thinStyle}>(${qsWert} QS x 3)</span></p>\n            </div>\n        </div>\n    `;\n\n    let msg = alteMessageId ? game.messages.get(alteMessageId) : null;\n    if (msg) {\n        await msg.update({ content: successContent }); \n    } else {\n        await ChatMessage.create({ content: successContent, speaker: { alias: \"System\" } });\n    }\n})();",
+  "flags": {},
+  "_stats": {
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": {
+      "worldId": "dsk-zum-erstellen",
+      "uuid": "Macro.ged5a3PbWqd89kp1",
+      "coreVersion": "13.351",
+      "systemId": "dsk",
+      "systemVersion": "4.2.8"
+    },
+    "coreVersion": "13.351",
+    "systemId": "dsk",
+    "systemVersion": "4.2.8",
+    "createdTime": 1788443949993,
+    "modifiedTime": 1788443949993,
+    "lastModifiedBy": "9CRVH1u8nNgMxGRR"
+  },
+  "ownership": {
+    "default": 0
+  }
+}

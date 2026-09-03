@@ -1,0 +1,30 @@
+{
+  "name": "Blick in die Seele",
+  "type": "script",
+  "author": "9CRVH1u8nNgMxGRR",
+  "img": "https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/DSK/Allgemein_Glaubenssymbole/Zerzal.webp",
+  "scope": "global",
+  "command": "// ==========================================\n// ⚙️ LUNAS WIRKUNG: BLICK IN DIE SEELE (V13 Ready - Reines Namens-Design)\n// ==========================================\n\n(async () => {\n    // Framework laden\n    const fwMacro = await fromUuid(\"Compendium.dsk-havena-und-umland.makros.Macro.fHQ2OuDo3Fe3spBn\");\n    if (fwMacro) await fwMacro.execute();\n    const DSK_FW = globalThis.DSK || DSK; \n\n    const gabenName = \"Blick in die Seele (Zerzal)\";\n    const ahne = \"zerzal\";\n    const maxReichweite = 8;\n\n    if (DSK_FW.EffektEnde) {\n        DSK_FW.EffektEnde.Register(\"blickInDieSeele\", gabenName, \"Der Blick in die Seele endet. Die tiefen Antriebe und Wünsche sind wieder verborgen.\");\n    }\n\n    // --- 1. AKTEUR & QS ---\n    const casterActor = canvas.tokens.controlled[0]?.actor || game.user.character;\n    if (!casterActor) return ui.notifications.warn(\"Kein Wirkender gefunden!\");\n    \n    const qs = casterActor.getFlag(\"world\", \"letzteGabenQS\") || 1;\n    const alteMessageId = casterActor.getFlag(\"world\", \"letzteGabenMessageId\");\n\n    // --- 2. BERECHNUNGEN (Dünn) ---\n    const dauerMinuten = qs;\n    const thinStyle = 'style=\"font-weight: 300; font-size: 0.9em; opacity: 0.8;\"';\n    const dauerCalc = `<span ${thinStyle}>(${qs} QS x 1 Min.)</span>`;\n    \n    const beschreibung = `Behält das Zerzalkind sein Ziel eine Minute im Blick, kann es spüren, was sein Ziel besonders antreibt.`;\n    const besonderheiten = `<b>Zielkategorie:</b> Menschen, Tiere, Erwachte<br><b>Reichweite:</b> ${maxReichweite} Schritt`;\n\n    // --- 3. TARGETS ---\n    const targetedTokens = Array.from(game.user.targets);\n    if (targetedTokens.length === 0) return ui.notifications.warn(\"Bitte wähle ein Ziel per Target aus!\");\n\n    const erfolge = [];\n    const fehler = [];\n\n    // --- 4. SCHLEIFE ---\n    for (let t of targetedTokens) {\n        if (!t.actor) continue;\n\n        // Distanz-Check\n        const distanz = DSK_FW.Distanz(canvas.tokens.controlled[0], t);\n        if (distanz > maxReichweite) {\n            fehler.push(t.name);\n            continue;\n        }\n\n        // Wesen-Check\n        const istErwachterOderNpc = DSK_FW.Effekt.CheckTarget(t.actor, \"erwachte\");\n        const istTier = DSK_FW.Wesen.match(t.actor, [\"tier\", \"tiere\", \"animal\", \"mensch\", \"menschen\"]);\n        if (!istErwachterOderNpc && !istTier) {\n            fehler.push(t.name);\n            continue;\n        }\n\n        // Effekt\n        await DSK_FW.Effekt.Anwenden({\n            name: gabenName,\n            ahne: ahne,\n            beschreibung: beschreibung,\n            qs: qs,\n            ziel: t.actor\n        });\n\n        const eff = t.actor.effects.find(e => e.name === gabenName);\n        if (eff) {\n            await eff.update({ duration: { seconds: dauerMinuten * 60 } });\n            erfolge.push(t.name);\n        }\n    }\n\n    // --- 5. FLAG-CLEANUP (Nur bei Erfolg) ---\n    if (erfolge.length > 0) {\n        await casterActor.unsetFlag(\"world\", \"letzteGabenQS\");\n        await casterActor.unsetFlag(\"world\", \"letzteGabenMessageId\");\n    }\n\n    // --- 6. CHATKARTE ---\n    let ownerIds = new Set(game.users.filter(u => u.isGM).map(u => u.id));\n    [...targetedTokens, canvas.tokens.controlled[0]].forEach(t => {\n        if(t?.actor) Object.entries(t.actor.ownership || {}).filter(([id, lvl]) => lvl === 3).forEach(([id]) => ownerIds.add(id));\n    });\n\n    const erfolgHtml = erfolge.length > 0 ? `<div style=\"margin-top: 10px; margin-bottom: 10px;\"><p style=\"margin-bottom: 5px;\"><span style=\"color:#18940F; font-weight:bold;\">Erfolg</span></p><ul class=\"dsklist\" style=\"margin-top:0; font-weight:normal; color: #000;\">${erfolge.map(n => `<li>${n}</li>`).join(\"\")}</ul></div>` : \"\";\n    const fehlschlagHtml = fehler.length > 0 ? `<div style=\"margin-top: 10px; margin-bottom: 10px;\"><p style=\"margin-bottom: 5px;\"><span style=\"color:#B30000; font-weight:bold;\">Fehlschlag</span></p><ul class=\"dsklist\" style=\"margin-top:0; font-weight:normal; color: #000;\">${fehler.map(n => `<li>${n}</li>`).join(\"\")}</ul></div>` : \"\";\n\n    const cardContent = `\n        <div style=\"font-family:'Signika',sans-serif;\">\n            ${DSK_FW.UI.Header(gabenName, DSK_FW.Symbol(ahne))}\n            <div class=\"dskbox2\" style=\"margin-top:10px;\">\n                <p><b>Gabenwirkung:</b> ${beschreibung}</p>\n                <p style=\"font-size: 0.9em;\">${besonderheiten}</p>\n                ${erfolgHtml}\n                ${fehlschlagHtml}\n                <hr>\n                <p style=\"text-align:center; font-weight:bold;\">\n                    Wirkungsdauer: ${dauerMinuten} Min. ${dauerCalc}\n                </p>\n            </div>\n        </div>\n    `;\n\n    let msg = alteMessageId ? game.messages.get(alteMessageId) : null;\n    if (msg) {\n        await msg.update({ content: cardContent });\n    } else {\n        const neueMsg = await ChatMessage.create({\n            speaker: { alias: \"System\" },\n            whisper: Array.from(ownerIds).filter(id => game.users.get(id)),\n            content: cardContent\n        });\n        if (neueMsg && fehler.length > 0 && erfolge.length === 0) {\n            await casterActor.setFlag(\"world\", \"letzteGabenMessageId\", neueMsg.id);\n        }\n    }\n})();",
+  "folder": "13pY61Dh0lQoEeW8",
+  "flags": {},
+  "_stats": {
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": {
+      "worldId": "dsk-zum-erstellen",
+      "uuid": "Macro.igzB09f7RUVskiOH",
+      "coreVersion": "13.351",
+      "systemId": "dsk",
+      "systemVersion": "4.2.8"
+    },
+    "coreVersion": "13.351",
+    "systemId": "dsk",
+    "systemVersion": "4.2.8",
+    "createdTime": 1788443949993,
+    "modifiedTime": 1788443949993,
+    "lastModifiedBy": "9CRVH1u8nNgMxGRR"
+  },
+  "ownership": {
+    "default": 0
+  }
+}

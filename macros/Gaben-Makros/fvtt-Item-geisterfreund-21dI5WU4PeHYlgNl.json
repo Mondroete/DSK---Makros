@@ -1,0 +1,95 @@
+{
+  "name": "Geisterfreund",
+  "img": "https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/DSK/Allgemein_Glaubenssymbole/Zerzal.webp",
+  "effects": [
+    {
+      "name": "Geisterfreund",
+      "img": "https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/DSK/Allgemein_Glaubenssymbole/Zerzal.webp",
+      "origin": "Actor.m4lI1pf9uG0ZHLTg.Item.Yjbz1pNGfrbV5KK1",
+      "flags": {
+        "dsk": {
+          "value": null,
+          "description": "",
+          "auto": null,
+          "manual": 0,
+          "hideOnToken": false,
+          "hidePlayers": false,
+          "customDuration": "",
+          "advancedFunction": "2",
+          "resistRoll": "",
+          "args3": "// ==========================================\n// ⚙️ KONFIGURATION: GABEN-DETAILS HIER EINTRAGEN\n// ==========================================\nconst gabenName = \"Geisterfreund (Zerzal)\";\nconst aepKosten = 8;\n\n// HIER steht die UUID deines externen Makros! (1tBOnhW6okOKlMd4)\nconst macroLink = \"@UUID[Compendium.dsk-havena-und-umland.makros.Macro.1tBOnhW6okOKlMd4]{Geisterfreund wirken}\";\n\nconst iconBild = \"https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/systems/dsk/icons/categories/ahnengabe.webp\";\n// ==========================================\n\n(async () => {\n    // ============================================================\n    // 1. FRAMEWORK LADEN (Lädt das ECHTE Framework: fHQ2OuDo3Fe3spBn)\n    // ============================================================\n    if (typeof DSK === \"undefined\" || !globalThis.DSK) {\n        const fwMacro = await fromUuid(\"Compendium.dsk-havena-und-umland.makros.Macro.fHQ2OuDo3Fe3spBn\");\n        if (fwMacro) await fwMacro.execute();\n        await new Promise(resolve => setTimeout(resolve, 150)); \n    }\n\n    if (typeof DSK === \"undefined\" && !globalThis.DSK) {\n        return ui.notifications.error(\"Luna sagt 🌙: Das DSK-Framework konnte nicht geladen werden!\");\n    }\n    const DSK_FW = globalThis.DSK || DSK; \n\n    // ============================================================\n    // 2. WIRKENDEN AKTEUR ERMITTELN\n    // ============================================================\n    let wirkenderActor = null;\n    if (typeof actor !== \"undefined\" && actor) {\n        wirkenderActor = actor; \n    } else if (typeof testData !== \"undefined\" && testData && testData.speaker) {\n        wirkenderActor = game.actors.get(testData.speaker.actor);\n    }\n    if (!wirkenderActor) wirkenderActor = canvas.tokens.controlled[0]?.actor;\n    if (!wirkenderActor) wirkenderActor = game.user.character;\n\n    if (!wirkenderActor) {\n        return ui.notifications.warn(\"Luna sagt 🌙: Ich konnte den Wirkenden nicht finden!\");\n    }\n\n    // ============================================================\n    // 3. AeP PRÜFEN & ABZIEHEN\n    // ============================================================\n    const currentAeP = foundry.utils.getProperty(wirkenderActor, \"system.stats.AeP.value\") || 0;\n    \n    let htmlInhalt = \"\";\n    let topHeader = \"\";\n\n    if (currentAeP < aepKosten) {\n        topHeader = \"Fehlschlag\";\n        await wirkenderActor.update({ \"system.stats.AeP.value\": 0 });\n        \n        htmlInhalt = `\n            <p style=\"margin-bottom: 8px;\"><b>${wirkenderActor.name}</b> hat versucht, die Gabe zu wirken.</p>\n            <hr style=\"margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;\">\n            <p style=\"margin-bottom: 8px; color: #8b0000;\"><b>Fehlschlag!</b> Die Kraft reicht nicht aus.</p>\n            <p style=\"margin-bottom: 8px;\">Die restlichen <b>${currentAeP} AeP</b> wurden verbraucht, aber die Gabe schlägt fehl.</p>\n        `;\n    } else {\n        topHeader = \"Wirkungsbeginn\"; \n        \n        let ermittelteQS = 1;\n        if (typeof testData !== \"undefined\") {\n            ermittelteQS = Number(testData?.result?.QL || testData?.qualityStep || 1);\n        }\n        await wirkenderActor.setFlag(\"world\", \"letzteGabenQS\", ermittelteQS);\n        await wirkenderActor.update({ \"system.stats.AeP.value\": currentAeP - aepKosten });\n        \n        htmlInhalt = `\n            <p style=\"margin-bottom: 8px;\"><b>${wirkenderActor.name}</b> hat die Gabe gewirkt.</p>\n            <hr style=\"margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;\">\n            <p style=\"margin-bottom: 8px; color: #76301b;\"><b>Kosten:</b> Die AeP in Höhe von <b>${aepKosten}</b> sind abgezogen worden.</p>\n            <hr style=\"margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;\">\n            <p style=\"margin-bottom: 8px;\">Bitte klicke hier, um die Wirkung auszulösen:</p>\n            <span style=\"font-size: 15px;\">${macroLink}</span>\n        `;\n    }\n    \n    // ============================================================\n    // 4. CHAT-NACHRICHT BAUEN & SENDEN\n    // ============================================================\n    const contentHtml = `\n        <div style=\"font-family: 'Signika', sans-serif;\">\n            <div class=\"dskbox1\">\n                <p style=\"display:flex; gap:8px; align-items:center; margin:0; white-space:nowrap;\">\n                    <img src=\"${iconBild}\" style=\"width:28px; height:28px; border:none; background:transparent; flex-shrink:0;\">\n                    <b style=\"font-size: 1.05em;\">${topHeader}</b>\n                </p>\n                <p style=\"font-weight:bold; margin-top:6px; margin-bottom:0;\">${gabenName}</p>\n            </div>\n            <div class=\"dskbox2\" style=\"margin-top:10px; text-align: center;\">\n                ${htmlInhalt}\n            </div>\n        </div>\n    `;\n    \n    await ChatMessage.create({\n        speaker: { alias: \"System\" },\n        content: contentHtml\n    });\n})();",
+          "onRemove": ""
+        }
+      },
+      "_id": "xp98zyom7udeMgrB",
+      "type": "base",
+      "system": {},
+      "changes": [],
+      "disabled": false,
+      "duration": {
+        "startTime": null,
+        "combat": null,
+        "seconds": null,
+        "rounds": null,
+        "turns": null,
+        "startRound": null,
+        "startTurn": null
+      },
+      "description": "",
+      "tint": "#ffffff",
+      "transfer": true,
+      "statuses": [],
+      "sort": 0,
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "dsk",
+        "systemVersion": "4.2.8",
+        "lastModifiedBy": null
+      }
+    }
+  ],
+  "type": "ahnengabe",
+  "system": {
+    "description": {
+      "value": "<p>„Halte ihn fest im Blick, lass die Schnurrhaare zittern und flüstere ‚Freunde im Dies- und Jenseits‘. So es Zerzal gefällt, wird der Geist Vertrauen zu dir fassen.“</p><p>– Kieran Nachtgesicht</p>",
+      "gminfo": ""
+    },
+    "characteristic1": "ch",
+    "characteristic2": "in",
+    "effect": "Mit Geisterfreund kann ein Zerzalkind in einem Geist für eine Weile Sympathien und Freundschaft ihm gegenüber wecken. Die genaue Wirkung ist davon abhängig, wie das Ziel zu dem Zerzalkind steht. Pro QS verbessert sich die Beziehung zwischen den beiden um eine Stufe. Ist das Zerzalkind dem Ziel vorher unbekannt, bewegt sich die Einstellung des Ziels meist bei Stufe 4 (Abneigung) oder Stufe 5 (neutral).\nStufe 1: Das Ziel steht dem Zerzalkind voll unstillbarem Hass gegenüber.\nStufe 2: Das Ziel ist der erklärte Feind des Zerzalkindes.\nStufe 3: Das Ziel verspürt dem Zerzalkind gegenüber Abscheu und Ablehnung.\nStufe 4: Das Ziel verspürt eine gewisse Abneigung gegen das Zerzalkind.\nStufe 5: Das Ziel ist dem Zerzalkind gegenüber neutral.\nStufe 6: Das Ziel verspürt eine gewisse Zuneigung für das Zerzalkind.\nStufe 7: Das Ziel empfindet Vertrauen und Freundschaft zum Zerzalkind.\nDiese Ahnengabe verändert nicht das Erinnerungsvermögen. Dem Ziel ist nach Ende der Ahnengabe bewusst, was es empfunden und getan hat. Während der Wirkung mag es sich der Gabe bewusst sein, das beeinflusst aber seine neue Einstellung nicht. Handlungen des Zerzalkindes hingegen können während der Wirkung das Verhältnis zum Ziel positiv oder negativ beeinflussen.",
+    "effectFormula": "",
+    "duration": "QS x 5 Minuten",
+    "AeP": "8",
+    "distribution": "Zerzal (Jenseits)",
+    "StF": "B",
+    "targetCategory": "Geister",
+    "range": "8 Schritt",
+    "level": 0,
+    "resist": "sk"
+  },
+  "folder": "Bfgy2Rjd3j1lTvPi",
+  "flags": {},
+  "_stats": {
+    "compendiumSource": "Item.JxUsrS0iGS7L2b0a",
+    "duplicateSource": null,
+    "exportSource": {
+      "worldId": "dsk-zum-erstellen",
+      "uuid": "Item.21dI5WU4PeHYlgNl",
+      "coreVersion": "13.351",
+      "systemId": "dsk",
+      "systemVersion": "4.2.8"
+    },
+    "coreVersion": "13.351",
+    "systemId": "dsk",
+    "systemVersion": "4.2.8",
+    "createdTime": 1787737800317,
+    "modifiedTime": 1787737807112,
+    "lastModifiedBy": "9CRVH1u8nNgMxGRR"
+  },
+  "ownership": {
+    "default": 0
+  }
+}

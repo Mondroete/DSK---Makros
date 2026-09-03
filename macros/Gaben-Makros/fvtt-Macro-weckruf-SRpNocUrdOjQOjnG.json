@@ -1,0 +1,30 @@
+{
+  "name": "Weckruf",
+  "type": "script",
+  "command": "// ==========================================\n// 🌙 LUNAS WECKER (System-Start & Wächter)\n// ==========================================\n(async () => {\n    // --- 1. Framework wecken ---\n    const fwMacro = await fromUuid(\"Compendium.dsk-havena-und-umland.makros.Macro.fHQ2OuDo3Fe3spBn\");\n    if (fwMacro) {\n        await fwMacro.execute();\n    } else {\n        return ui.notifications.error(\"Luna sagt 🌙: Framework nicht gefunden!\");\n    }\n\n    const DSK_FW = globalThis.DSK || DSK;\n    if (!DSK_FW || !DSK_FW.EffektEnde) return ui.notifications.error(\"Luna sagt 🌙: DSK.EffektEnde fehlt im Framework!\");\n\n    // --- 2. Alle Abbruch-Wächter (EffektEnde) sofort scharfschalten ---\n    \n    // Wächter: Verborgener Wurf\n    if (!globalThis._dskVerborgenerWurfRegistered) {\n        globalThis._dskVerborgenerWurfRegistered = true;\n        DSK_FW.EffektEnde.Register(\"verborgenerWurf\", \"Verborgener Wurf (Rondra)\", \"Die verschleiernden Schatten verziehen sich. Der Verborgene Wurf ist nicht mehr aktiv und das Ziel wird wieder sichtbar.\");\n    }\n\n    // Wächter: Weckruf\n    if (!globalThis._dskWeckrufRegistered) {\n        globalThis._dskWeckrufRegistered = true;\n        DSK_FW.EffektEnde.Register(\"weckruf\", \"Weckruf (Zerzal)\", \"Die wachsamen Schatten von Zerzal verblassen. Der Weckruf ist nicht mehr aktiv.\");\n    }\n\n    // Wächter: Zielscheibe (erfasst auch Namenszusätze wie \"Zielscheibe (Zerzal) - Beute\")\n    if (!globalThis._dskZielscheibeRegistered) {\n        globalThis._dskZielscheibeRegistered = true;\n        DSK_FW.EffektEnde.Register(\"zerzalZielscheibe\", \"Zielscheibe (Zerzal)\", \"Du verlierst deine Beute aus dem Fokus. Dein Angriff sinkt wieder auf den Normalwert.\");\n    }\n\n    // Wächter: Anleiten (Selbstvertrauen)\n    if (!globalThis._dskAnleitenRegistered) {\n        globalThis._dskAnleitenRegistered = true;\n        DSK_FW.EffektEnde.Register(\"anleitenNurti\", \"Anleiten (Nurti) - Selbstvertrauen\", \"Das gestärkte Selbstvertrauen schwindet.\");\n    }\n\n    // --- 3. Bestätigungs-Nachricht an den Spielleiter senden ---\n    const contentHTML = `\n        <div style=\"font-family: 'Signika', sans-serif;\">\n            <div class=\"dskbox1\">\n                <p style=\"display:flex; gap:8px; align-items:center; margin:0;\">\n                    <span style=\"font-size: 24px;\">🌙</span>\n                    <b>System Online</b>\n                </p>\n                <p style=\"font-weight:bold; margin-top:6px; margin-bottom:0;\">Lunas Wecker</p>\n            </div>\n            <div class=\"dskbox2\" style=\"margin-top:10px; text-align: center;\">\n                <p style=\"margin-bottom: 8px;\">Guten Morgen! Die Welt ist erwacht.</p>\n                <hr style=\"margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;\">\n                <p style=\"color: #18940F; font-weight: bold; margin-bottom: 8px;\">Alle Wächter & Zonen sind aktiv!</p>\n                <p style=\"font-size: 0.9em; color: #555;\">(Verborgener Wurf, Weckruf, Zielscheibe, Zonen-Scanner und Anleiten überwachen nun das Spiel.)</p>\n            </div>\n        </div>\n    `;\n\n    await ChatMessage.create({\n        speaker: { alias: \"System\" },\n        whisper: game.users.filter(u => u.isGM).map(u => u.id),\n        content: contentHTML\n    });\n})();",
+  "img": "icons/magic/sonic/bell-alarm-red-purple.webp",
+  "author": "9CRVH1u8nNgMxGRR",
+  "scope": "global",
+  "folder": null,
+  "flags": {},
+  "_stats": {
+    "compendiumSource": "Macro.SRpNocUrdOjQOjnG",
+    "duplicateSource": null,
+    "exportSource": {
+      "worldId": "dsk-zum-erstellen",
+      "uuid": "Macro.SRpNocUrdOjQOjnG",
+      "coreVersion": "13.351",
+      "systemId": "dsk",
+      "systemVersion": "4.2.8"
+    },
+    "coreVersion": "13.351",
+    "systemId": "dsk",
+    "systemVersion": "4.2.8",
+    "createdTime": 1787732835351,
+    "modifiedTime": 1788442705232,
+    "lastModifiedBy": "9CRVH1u8nNgMxGRR"
+  },
+  "ownership": {
+    "default": 0
+  }
+}

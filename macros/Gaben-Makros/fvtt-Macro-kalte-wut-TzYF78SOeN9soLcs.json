@@ -1,0 +1,30 @@
+{
+  "folder": "13pY61Dh0lQoEeW8",
+  "name": "Kalte Wut",
+  "type": "script",
+  "author": "9CRVH1u8nNgMxGRR",
+  "img": "https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/DSK/Allgemein_Glaubenssymbole/Rondra.webp",
+  "scope": "global",
+  "command": "// ==========================================\n// ⚙️ LUNAS WIRKUNG: KALTE WUT (Rondra)\n// ==========================================\n\n(async () => {\n    // --- 1. SICHERHEITS-CHECK: FRAMEWORK LADEN ---\n    if (!globalThis.DSK) {\n        const fwMacro = await fromUuid(\"Compendium.dsk-havena-und-umland.makros.Macro.fHQ2OuDo3Fe3spBn\");\n        if (fwMacro) await fwMacro.execute();\n        await new Promise(resolve => setTimeout(resolve, 150)); \n    }\n    if (!globalThis.DSK) return ui.notifications.error(\"Luna sagt 🌙: Das DSK-Framework fehlt!\");\n    const DSK_FW = globalThis.DSK; \n\n    // --- 2. WIRKENDEN PRÜFEN & QS HOLEN (Panzerglas-Schutz!) ---\n    let casterToken = canvas.tokens.controlled[0];\n    const casterActor = casterToken?.actor || game.user.character;\n    if (!casterActor) return ui.notifications.warn(\"Bitte wähle zuerst deinen Token aus!\");\n\n    if (!casterToken) casterToken = canvas.tokens.placeables.find(t => t.actor?.id === casterActor.id);\n\n    let qsWert = casterActor.getFlag(\"world\", \"letzteGabenQS\") || 1;\n    if (casterActor.getFlag(\"world\", \"letzteGabenQS\")) await casterActor.unsetFlag(\"world\", \"letzteGabenQS\"); \n\n    let rollData = (typeof testData !== \"undefined\" && testData) ? testData : ((typeof args !== \"undefined\" && args[0]) ? args[0] : null);\n    if (rollData && (rollData.qualityStep !== undefined || rollData.result?.QL !== undefined)) {\n        qsWert = Number(rollData.qualityStep || rollData.result?.QL || 1);\n    } else {\n        const lastRollMsg = game.messages.contents.slice().reverse().find(m => \n            m.speaker?.actor === casterActor.id && m.content && m.content.includes(\"Qualitätsstufe\")\n        );\n        if (lastRollMsg) {\n            const qsMatch = lastRollMsg.content.match(/Qualitätsstufe(?:[^0-9]+)(\\d+)/i);\n            if (qsMatch && qsMatch[1]) qsWert = Number(qsMatch[1]);\n        }\n    }\n\n    const gabenName = \"Kalte Wut\";\n    const ahne = \"Rondra\";\n    const finalEffektName = `${gabenName} (${ahne})`;\n    const casterName = DSK_FW.ResolveTokenName(casterActor);\n    const dauerKR = qsWert * 5;\n    const iconBild = DSK_FW.Symbol(ahne);\n\n    // --- 3. ALTE EFFEKTE LÖSCHEN ---\n    for (let ef of casterActor.effects) { \n        if ((ef.name || ef.label) === finalEffektName) await ef.delete(); \n    }\n\n    // --- 4. ENDEKARTE REGISTRIEREN ---\n    if (DSK_FW.EffektEnde) {\n        DSK_FW.EffektEnde.Register(\"kalteWut\", finalEffektName, \"Die Kalte Wut verraucht. Das Rondrakind beruhigt sich und der Rausch endet.\");\n    }\n\n    // --- 5. EFFEKT (MIT EXAKTEN RASEREI-WERTEN) ANWENDEN ---\n    await casterActor.createEmbeddedDocuments(\"ActiveEffect\", [{\n        name: finalEffektName,\n        icon: iconBild,\n        img: iconBild,\n        description: `Das Rondrakind befindet sich in einem Kampfrausch und profitiert vom Status <b>Raserei</b>.`,\n        duration: { \n            rounds: dauerKR,           // Zählt im Kampf-Tracker automatisch runter!\n            seconds: dauerKR * 5       // Fallback für außerhalb des Kampfes\n        },\n        // HIER SIND DIE EXAKTEN WERTE AUS DEINEM SYSTEM-CODE:\n        changes: [\n            { key: \"system.meleeStats.attack\", mode: 2, value: \"4\" },\n            { key: \"system.meleeStats.parry\", mode: 2, value: \"-100\" },\n            { key: \"system.rangeStats.attack\", mode: 2, value: \"-100\" }\n        ],\n        // Dieser Status-Tag verknüpft den Effekt direkt mit der System-Logik für \"Raserei\"\n        statuses: [\"bloodrush\"],\n        flags: { dsk: { qs: qsWert } }\n    }]);\n\n    // --- 6. CHAT-KARTE FÜR WIRKUNGSBEGINN ---\n    await ChatMessage.create({\n        speaker: { alias: \"System\" },\n        content: `\n            <div style=\"font-family: 'Signika', sans-serif;\">\n                ${DSK_FW.UI.Header(finalEffektName, iconBild)}\n                <div class=\"dskbox2\" style=\"margin-top:10px; text-align:center;\">\n                    <p style=\"margin-bottom: 8px; font-size:1.05em;\"><b>${casterName}</b> verfällt in einen unaufhaltsamen Zorn!</p>\n                    <hr style=\"margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;\">\n                    <p style=\"margin-bottom: 8px;\">\n                        Das Rondrakind wird von der Kalten Wut gepackt und ist nun in Raserei!<br><br>\n                        <span style=\"font-size:0.9em; color:#8b0000;\">\n                            <b>Nahkampf:</b> Attacke +4, Parade nicht mehr möglich<br>\n                            <b>Fernkampf:</b> Nicht mehr möglich\n                        </span>\n                    </p>\n                    <hr style=\"margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;\">\n                    <p style=\"margin-bottom: 8px; font-weight:bold;\">Wirkungsdauer:<br>${dauerKR} Kampfrunden</p>\n                </div>\n            </div>\n        `\n    });\n})();",
+  "flags": {},
+  "_stats": {
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": {
+      "worldId": "dsk-zum-erstellen",
+      "uuid": "Macro.TzYF78SOeN9soLcs",
+      "coreVersion": "13.351",
+      "systemId": "dsk",
+      "systemVersion": "4.2.8"
+    },
+    "coreVersion": "13.351",
+    "systemId": "dsk",
+    "systemVersion": "4.2.8",
+    "createdTime": 1788443949993,
+    "modifiedTime": 1788443949993,
+    "lastModifiedBy": "9CRVH1u8nNgMxGRR"
+  },
+  "ownership": {
+    "default": 0
+  }
+}

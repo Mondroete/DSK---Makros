@@ -1,0 +1,95 @@
+{
+  "name": "Herzschlag",
+  "img": "https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/DSK/Allgemein_Glaubenssymbole/Zerzal.webp",
+  "effects": [
+    {
+      "name": "Herzschlag",
+      "img": "https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/DSK/Allgemein_Glaubenssymbole/Zerzal.webp",
+      "origin": "Actor.m4lI1pf9uG0ZHLTg.Item.5i1VdCEXx2RnJVMf",
+      "flags": {
+        "dsk": {
+          "value": null,
+          "description": "",
+          "auto": null,
+          "manual": 0,
+          "hideOnToken": false,
+          "hidePlayers": false,
+          "customDuration": "",
+          "advancedFunction": "2",
+          "resistRoll": "",
+          "args3": "// ==========================================\n// ⚙️ KONFIGURATION: GABEN-DETAILS HIER EINTRAGEN\n// ==========================================\nconst gabenName = \"Herzschlag (Zerzal)\";\nconst aepKosten = 4;\nconst macroLink = \"@UUID[Compendium.dsk-havena-und-umland.makros.Macro.gxe5Cyn8HS9wUUyt]{Herzschlag wirken}\";\nconst iconBild = \"https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/systems/dsk/icons/categories/ahnengabe.webp\";\n// ==========================================\n\n(async () => {\n    // --- 1. SICHERHEITS-CHECK: FRAMEWORK LADEN ---\n    if (typeof DSK === \"undefined\" || !globalThis.DSK) {\n        const fwMacro = await fromUuid(\"Compendium.dsk-havena-und-umland.makros.Macro.1tBOnhW6okOKlMd4\");\n        if (fwMacro) await fwMacro.execute();\n        await new Promise(resolve => setTimeout(resolve, 150)); \n    }\n\n    if (typeof DSK === \"undefined\" && !globalThis.DSK) {\n        return ui.notifications.error(\"Luna sagt 🌙: Das DSK-Framework konnte nicht geladen werden!\");\n    }\n    const DSK_FW = globalThis.DSK || DSK; \n\n    // --- 2. AKTEUR ERMITTELN ---\n    let wirkenderActor = null;\n    if (typeof actor !== \"undefined\" && actor) {\n        wirkenderActor = actor; \n    } else if (typeof testData !== \"undefined\" && testData && testData.speaker) {\n        wirkenderActor = game.actors.get(testData.speaker.actor);\n    }\n    if (!wirkenderActor) wirkenderActor = canvas.tokens.controlled[0]?.actor;\n    if (!wirkenderActor) wirkenderActor = game.user.character;\n\n    if (!wirkenderActor) {\n        return ui.notifications.warn(\"Luna sagt 🌙: Ich konnte den Wirkenden nicht finden!\");\n    }\n    \n    // --- 3. AKTUELLE AeP AUSLESEN & PRÜFEN ---\n    const currentAeP = foundry.utils.getProperty(wirkenderActor, \"system.stats.AeP.value\") || 0;\n    \n    let htmlInhalt = \"\";\n    let topHeader = \"\";\n\n    if (currentAeP < aepKosten) {\n        // FEHLSCHLAG: Nicht genug Kraft\n        topHeader = \"Fehlschlag\";\n        \n        await wirkenderActor.update({ \"system.stats.AeP.value\": 0 });\n        \n        htmlInhalt = `\n            <p style=\"margin-bottom: 8px;\"><b>${wirkenderActor.name}</b> hat versucht, die Gabe zu wirken.</p>\n            <hr style=\"margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;\">\n            <p style=\"margin-bottom: 8px; color: #8b0000;\"><b>Fehlschlag!</b> Die Kraft reicht nicht aus.</p>\n            <p style=\"margin-bottom: 8px;\">Die restlichen <b>${currentAeP} AeP</b> wurden verbraucht, aber die Gabe schlägt fehl.</p>\n        `;\n    } else {\n        // ERFOLG: Genug Kraft\n        topHeader = \"Wirkungsbeginn\"; \n        \n        let ermittelteQS = 1;\n        if (typeof testData !== \"undefined\") {\n            ermittelteQS = Number(testData?.result?.QL || testData?.qualityStep || 1);\n        }\n        await wirkenderActor.setFlag(\"world\", \"letzteGabenQS\", ermittelteQS);\n        \n        await wirkenderActor.update({ \"system.stats.AeP.value\": currentAeP - aepKosten });\n        \n        htmlInhalt = `\n            <p style=\"margin-bottom: 8px;\"><b>${wirkenderActor.name}</b> hat die Gabe gewirkt.</p>\n            <hr style=\"margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;\">\n            <p style=\"margin-bottom: 8px; color: #76301b;\"><b>Kosten:</b> Die AeP in Höhe von <b>${aepKosten}</b> sind abgezogen worden.</p>\n            <hr style=\"margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;\">\n            <p style=\"margin-bottom: 8px;\">Bitte klicke hier, um auf den Herzschlag der Umgebung zu lauschen:</p>\n            <span style=\"font-size: 15px;\">${macroLink}</span>\n        `;\n    }\n    \n    // --- 4. CHAT-NACHRICHT BAUEN & SENDEN ---\n    const contentHtml = `\n        <div style=\"font-family: 'Signika', sans-serif;\">\n            <div class=\"dskbox1\">\n                <p style=\"display:flex; gap:8px; align-items:center; margin:0; white-space:nowrap;\">\n                    <img src=\"${iconBild}\" style=\"width:28px; height:28px; border:none; background:transparent; flex-shrink:0;\">\n                    <b style=\"font-size: 1.05em;\">${topHeader}</b>\n                </p>\n                <p style=\"font-weight:bold; margin-top:6px; margin-bottom:0;\">${gabenName}</p>\n            </div>\n            <div class=\"dskbox2\" style=\"margin-top:10px; text-align: center;\">\n                ${htmlInhalt}\n            </div>\n        </div>\n    `;\n    \n    await ChatMessage.create({\n        speaker: { alias: \"System\" },\n        content: contentHtml\n    });\n})();",
+          "onRemove": ""
+        }
+      },
+      "_id": "dR8f483Ehp3MtVVL",
+      "type": "base",
+      "system": {},
+      "changes": [],
+      "disabled": false,
+      "duration": {
+        "startTime": null,
+        "combat": null,
+        "seconds": null,
+        "rounds": null,
+        "turns": null,
+        "startRound": null,
+        "startTurn": null
+      },
+      "description": "",
+      "tint": "#ffffff",
+      "transfer": true,
+      "statuses": [],
+      "sort": 0,
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "dsk",
+        "systemVersion": "4.2.8",
+        "lastModifiedBy": null
+      }
+    }
+  ],
+  "type": "ahnengabe",
+  "system": {
+    "description": {
+      "value": "<p>„Schließe die Augen und werde eins mit der Stille.</p><p>Öffne deinen Geist und lausche den pochenden Herzen.“</p><p>– Pjer Einauge</p>",
+      "gminfo": ""
+    },
+    "characteristic1": "in",
+    "characteristic2": "ko",
+    "effect": "Das Zerzalkind spürt den Herzschlag aller Lebewesen in einem Umkreis von QS x 5 Schritt und kann ungefähr Richtung und Entfernung einschätzen.",
+    "effectFormula": "",
+    "duration": "QS Minuten",
+    "AeP": "4",
+    "distribution": "Zerzal (Jagd)",
+    "StF": "A",
+    "targetCategory": "Lebewesen",
+    "range": "selbst",
+    "level": 0,
+    "resist": "-"
+  },
+  "folder": "Bfgy2Rjd3j1lTvPi",
+  "flags": {},
+  "_stats": {
+    "compendiumSource": "Item.Gynsrpa7qpOdSvo8",
+    "duplicateSource": null,
+    "exportSource": {
+      "worldId": "dsk-zum-erstellen",
+      "uuid": "Item.aQbtw7h2Uxzsf7WN",
+      "coreVersion": "13.351",
+      "systemId": "dsk",
+      "systemVersion": "4.2.8"
+    },
+    "coreVersion": "13.351",
+    "systemId": "dsk",
+    "systemVersion": "4.2.8",
+    "createdTime": 1787737839605,
+    "modifiedTime": 1787737839605,
+    "lastModifiedBy": "9CRVH1u8nNgMxGRR"
+  },
+  "ownership": {
+    "default": 0
+  }
+}

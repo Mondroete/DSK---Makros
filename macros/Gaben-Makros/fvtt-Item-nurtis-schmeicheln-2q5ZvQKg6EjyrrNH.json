@@ -1,0 +1,95 @@
+{
+  "name": "Nurtis Schmeicheln",
+  "img": "https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/DSK/Allgemein_Glaubenssymbole/Nurti.webp",
+  "effects": [
+    {
+      "name": "Nurtis Schmeicheln",
+      "img": "https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/DSK/Allgemein_Glaubenssymbole/Nurti.webp",
+      "origin": "Actor.m4lI1pf9uG0ZHLTg.Item.QeinV5GYZ897uNyp",
+      "flags": {
+        "dsk": {
+          "value": null,
+          "description": "",
+          "auto": null,
+          "manual": 0,
+          "hideOnToken": false,
+          "hidePlayers": false,
+          "customDuration": "",
+          "advancedFunction": "2",
+          "resistRoll": "",
+          "args3": "// ==========================================\n// ⚙️ KONFIGURATION: GABEN-DETAILS HIER EINTRAGEN\n// ==========================================\nconst gabenName = \"Nurtis Schmeicheln (Nurti)\";\nconst aepKosten = 8;\nconst macroLink = \"@UUID[Compendium.dsk-havena-und-umland.makros.Macro.nSHmuCx5ZDQWSagj]{Nurtis Schmeicheln wirken}\";\nconst iconBild = \"https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/systems/dsk/icons/categories/ahnengabe.webp\";\n// ==========================================\n\n(async () => {\n    // --- 1. SICHERHEITS-CHECK: FRAMEWORK LADEN ---\n    if (typeof DSK === \"undefined\" || !globalThis.DSK) {\n        const fwMacro = await fromUuid(\"Compendium.dsk-havena-und-umland.makros.Macro.fHQ2OuDo3Fe3spBn\");\n        if (fwMacro) await fwMacro.execute();\n        await new Promise(resolve => setTimeout(resolve, 150)); \n    }\n\n    if (typeof DSK === \"undefined\" && !globalThis.DSK) {\n        return ui.notifications.error(\"Luna sagt 🌙: Das DSK-Framework konnte nicht geladen werden!\");\n    }\n    const DSK_FW = globalThis.DSK || DSK; \n\n    // --- 2. AKTEUR ERMITTELN ---\n    let wirkenderActor = null;\n    if (typeof actor !== \"undefined\" && actor) {\n        wirkenderActor = actor; \n    } else if (typeof testData !== \"undefined\" && testData && testData.speaker) {\n        wirkenderActor = game.actors.get(testData.speaker.actor);\n    }\n    if (!wirkenderActor) wirkenderActor = canvas.tokens.controlled[0]?.actor;\n    if (!wirkenderActor) wirkenderActor = game.user.character;\n\n    if (!wirkenderActor) {\n        return ui.notifications.warn(\"Luna sagt 🌙: Ich konnte den Wirkenden nicht finden!\");\n    }\n    \n    // --- 3. AKTUELLE AeP AUSLESEN & PRÜFEN ---\n    const currentAeP = foundry.utils.getProperty(wirkenderActor, \"system.stats.AeP.value\") || 0;\n    \n    let htmlInhalt = \"\";\n    let topHeader = \"\";\n\n    if (currentAeP < aepKosten) {\n        // FEHLSCHLAG\n        topHeader = \"Fehlschlag\";\n        await wirkenderActor.update({ \"system.stats.AeP.value\": 0 });\n        \n        htmlInhalt = `\n            <p style=\"margin-bottom: 8px;\"><b>${wirkenderActor.name}</b> hat versucht, die Gabe zu wirken.</p>\n            <hr style=\"margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;\">\n            <p style=\"margin-bottom: 8px; color: #8b0000;\"><b>Fehlschlag!</b> Die Kraft reicht nicht aus.</p>\n            <p style=\"margin-bottom: 8px;\">Die restlichen <b>${currentAeP} AeP</b> wurden verbraucht, aber die Gabe schlägt fehl.</p>\n        `;\n    } else {\n        // ERFOLG\n        topHeader = \"Information\"; \n        \n        let ermittelteQS = 1;\n        if (typeof testData !== \"undefined\") ermittelteQS = Number(testData?.result?.QL || testData?.qualityStep || 1);\n        \n        await wirkenderActor.setFlag(\"world\", \"letzteGabenQS\", ermittelteQS);\n        await wirkenderActor.update({ \"system.stats.AeP.value\": currentAeP - aepKosten });\n        \n        htmlInhalt = `\n            <p style=\"margin-bottom: 8px;\"><b>${wirkenderActor.name}</b> fordert die Aufmerksamkeit eines Zweibeiners ein.</p>\n            <hr style=\"margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;\">\n            <p style=\"margin-bottom: 8px; color: #76301b;\"><b>Kosten:</b> Die AeP in Höhe von <b>${aepKosten}</b> sind abgezogen worden.</p>\n            <hr style=\"margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;\">\n            <p style=\"margin-bottom: 8px;\">Bitte wähle ein Ziel (Target) und klicke hier:</p>\n            <span style=\"font-size: 15px;\">${macroLink}</span>\n        `;\n    }\n    \n    // --- 4. CHAT-NACHRICHT BAUEN & SENDEN ---\n    const contentHtml = `\n        <div style=\"font-family: 'Signika', sans-serif;\">\n            <div class=\"dskbox1\">\n                <p style=\"display:flex; gap:8px; align-items:center; margin:0; white-space:nowrap;\">\n                    <img src=\"${iconBild}\" style=\"width:28px; height:28px; border:none; background:transparent; flex-shrink:0;\">\n                    <b style=\"font-size: 1.05em;\">${topHeader}</b>\n                </p>\n                <p style=\"font-weight:bold; margin-top:6px; margin-bottom:0;\">${gabenName}</p>\n            </div>\n            <div class=\"dskbox2\" style=\"margin-top:10px; text-align: center;\">\n                ${htmlInhalt}\n            </div>\n        </div>\n    `;\n    \n    const msg = await ChatMessage.create({ speaker: { alias: \"System\" }, content: contentHtml });\n    if (currentAeP >= aepKosten && msg) {\n        await wirkenderActor.setFlag(\"world\", \"letzteGabenMessageId\", msg.id);\n    }\n})();",
+          "onRemove": ""
+        }
+      },
+      "_id": "QejMIxs59YzqCQHW",
+      "type": "base",
+      "system": {},
+      "changes": [],
+      "disabled": false,
+      "duration": {
+        "startTime": null,
+        "combat": null,
+        "seconds": null,
+        "rounds": null,
+        "turns": null,
+        "startRound": null,
+        "startTurn": null
+      },
+      "description": "",
+      "tint": "#ffffff",
+      "transfer": true,
+      "statuses": [],
+      "sort": 0,
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "dsk",
+        "systemVersion": "4.2.8",
+        "lastModifiedBy": null
+      }
+    }
+  ],
+  "type": "ahnengabe",
+  "system": {
+    "description": {
+      "value": "<p>Ach, was kann es schaden? Guck mal, wie drollig das Kätzchen guckt. Es ist so flauschig!“</p><p>– Weibel Cuanu, Stadtwache</p>",
+      "gminfo": ""
+    },
+    "characteristic1": "ch",
+    "characteristic2": "ge",
+    "effect": "Der betroffene Mensch ist gezwungen, das Nurtikind während der Wirkungsdauer zu streicheln. Er kann diese Handlung beenden, wenn ihm eine um QSx2 erschwerte Probe auf Willenskraft gelingt. Wird er angegriffen oder muss er sonst wie um Leib und Leben fürchten, endet die Wirkung augenblicklich.",
+    "effectFormula": "",
+    "duration": "QS Minuten",
+    "AeP": "8",
+    "distribution": "Nurti (Heilung, Lehre)",
+    "StF": "A",
+    "targetCategory": "Menschen",
+    "range": "Berührung",
+    "level": 0,
+    "resist": "sk"
+  },
+  "folder": "Bfgy2Rjd3j1lTvPi",
+  "flags": {},
+  "_stats": {
+    "compendiumSource": "Item.OkHAsbzY3Lh6k1DR",
+    "duplicateSource": null,
+    "exportSource": {
+      "worldId": "dsk-zum-erstellen",
+      "uuid": "Item.2q5ZvQKg6EjyrrNH",
+      "coreVersion": "13.351",
+      "systemId": "dsk",
+      "systemVersion": "4.2.8"
+    },
+    "coreVersion": "13.351",
+    "systemId": "dsk",
+    "systemVersion": "4.2.8",
+    "createdTime": 1788181330212,
+    "modifiedTime": 1788181330212,
+    "lastModifiedBy": "9CRVH1u8nNgMxGRR"
+  },
+  "ownership": {
+    "default": 0
+  }
+}

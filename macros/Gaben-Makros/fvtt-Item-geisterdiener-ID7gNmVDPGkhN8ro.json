@@ -1,0 +1,95 @@
+{
+  "name": "Geisterdiener",
+  "img": "https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/DSK/Allgemein_Glaubenssymbole/Zerzal.webp",
+  "effects": [
+    {
+      "name": "Geisterdiener",
+      "img": "https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/DSK/Allgemein_Glaubenssymbole/Zerzal.webp",
+      "origin": "Item.wU2i8FENcqH6WplV",
+      "flags": {
+        "dsk": {
+          "value": null,
+          "description": "",
+          "auto": null,
+          "manual": 0,
+          "hideOnToken": false,
+          "hidePlayers": false,
+          "customDuration": "",
+          "advancedFunction": "2",
+          "resistRoll": "",
+          "args3": "// ==========================================\n// ⚙️ KONFIGURATION: GABEN-DETAILS HIER EINTRAGEN\n// ==========================================\nconst gabenName = \"Geisterdiener (Zerzal)\";\nconst aepKosten = 8;\nconst macroLink = \"@UUID[Compendium.dsk-havena-und-umland.makros.Macro.b8FXzqjTzecwsIJp]{Geisterdiener wirken}\";\nconst iconBild = \"https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/systems/dsk/icons/categories/ahnengabe.webp\";\n// ==========================================\n\n(async () => {\n    // --- 1. SICHERHEITS-CHECK: FRAMEWORK LADEN ---\n    if (typeof DSK === \"undefined\" || !globalThis.DSK) {\n        const fwMacro = await fromUuid(\"Compendium.dsk-havena-und-umland.makros.Macro.fHQ2OuDo3Fe3spBn\");\n        if (fwMacro) await fwMacro.execute();\n        await new Promise(resolve => setTimeout(resolve, 150)); \n    }\n\n    if (typeof DSK === \"undefined\" && !globalThis.DSK) {\n        return ui.notifications.error(\"Luna sagt 🌙: Das DSK-Framework konnte nicht geladen werden!\");\n    }\n    const DSK_FW = globalThis.DSK || DSK; \n\n    // --- 2. AKTEUR ERMITTELN (Aus Chatkarte oder Token) ---\n    let wirkenderActor = null;\n    if (typeof actor !== \"undefined\" && actor) {\n        wirkenderActor = actor; \n    } else if (typeof testData !== \"undefined\" && testData && testData.speaker) {\n        wirkenderActor = game.actors.get(testData.speaker.actor);\n    }\n    if (!wirkenderActor) wirkenderActor = canvas.tokens.controlled[0]?.actor;\n    if (!wirkenderActor) wirkenderActor = game.user.character;\n\n    if (!wirkenderActor) {\n        return ui.notifications.warn(\"Luna sagt 🌙: Ich konnte den Wirkenden nicht finden!\");\n    }\n    \n    // --- 3. AKTUELLE AeP AUSLESEN & PRÜFEN ---\n    const currentAeP = foundry.utils.getProperty(wirkenderActor, \"system.stats.AeP.value\") || 0;\n    \n    let htmlInhalt = \"\";\n    let topHeader = \"\";\n\n    if (currentAeP < aepKosten) {\n        // FEHLSCHLAG: Nicht genug Kraft\n        topHeader = \"Fehlschlag\";\n        \n        // Zieht alle verbleibenden AeP ab (setzt sie auf 0)\n        await wirkenderActor.update({ \"system.stats.AeP.value\": 0 });\n        \n        htmlInhalt = `\n            <p style=\"margin-bottom: 8px;\"><b>${wirkenderActor.name}</b> hat versucht, die Gabe zu wirken.</p>\n            <hr style=\"margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;\">\n            <p style=\"margin-bottom: 8px; color: #8b0000;\"><b>Fehlschlag!</b> Die Kraft reicht nicht aus.</p>\n            <p style=\"margin-bottom: 8px;\">Die restlichen <b>${currentAeP} AeP</b> wurden verbraucht, aber die Gabe schlägt fehl.</p>\n        `;\n    } else {\n        // ERFOLG: Genug Kraft\n        topHeader = \"Wirkungsbeginn\"; \n        \n        let ermittelteQS = 1;\n        if (typeof testData !== \"undefined\") {\n            ermittelteQS = Number(testData?.result?.QL || testData?.qualityStep || 1);\n        }\n        await wirkenderActor.setFlag(\"world\", \"letzteGabenQS\", ermittelteQS);\n        \n        // Kosten abziehen\n        await wirkenderActor.update({ \"system.stats.AeP.value\": currentAeP - aepKosten });\n        \n        htmlInhalt = `\n            <p style=\"margin-bottom: 8px;\"><b>${wirkenderActor.name}</b> hat die Gabe gewirkt.</p>\n            <hr style=\"margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;\">\n            <p style=\"margin-bottom: 8px; color: #76301b;\"><b>Kosten:</b> Die AeP in Höhe von <b>${aepKosten}</b> sind abgezogen worden.</p>\n            <hr style=\"margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;\">\n            <p style=\"margin-bottom: 8px;\">Platziere eine Zonen-Schablone und klicke hier:</p>\n            <span style=\"font-size: 15px;\">${macroLink}</span>\n        `;\n    }\n    \n    // --- 4. CHAT-NACHRICHT BAUEN & SENDEN ---\n    const contentHtml = `\n        <div style=\"font-family: 'Signika', sans-serif;\">\n            <div class=\"dskbox1\">\n                <p style=\"display:flex; gap:8px; align-items:center;\">\n                    <img src=\"${iconBild}\" style=\"width:28px; border:none; background:transparent;\">\n                    <b>${topHeader}</b>\n                </p>\n                <p style=\"font-weight:bold; margin-top:6px;\">${gabenName}</p>\n            </div>\n            <div class=\"dskbox2\" style=\"margin-top:10px; text-align: center;\">\n                ${htmlInhalt}\n            </div>\n        </div>\n    `;\n    \n    await ChatMessage.create({\n        speaker: { alias: \"System\" },\n        content: contentHtml\n    });\n})();",
+          "onRemove": ""
+        }
+      },
+      "_id": "gXW0xkTr20DDaE4v",
+      "type": "base",
+      "system": {},
+      "changes": [],
+      "disabled": false,
+      "duration": {
+        "startTime": 1782131407,
+        "combat": null,
+        "seconds": null,
+        "rounds": null,
+        "turns": null,
+        "startRound": null,
+        "startTurn": null
+      },
+      "description": "",
+      "tint": "#ffffff",
+      "transfer": true,
+      "statuses": [],
+      "sort": 0,
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "dsk",
+        "systemVersion": "4.2.8",
+        "lastModifiedBy": null
+      }
+    }
+  ],
+  "type": "ahnengabe",
+  "system": {
+    "description": {
+      "value": "<p>„Sie fesseln die Seelen ihrer Beute in ihren Schädeln.</p><p>Ein grausiges Spiel, denn sie sammeln sie zu großen Haufen. Und wie zum Hohn können die Kinder Zerzals die Seelen wieder herauslocken, als Diener ihres Willens. Aber nur ein Narr würde den Geistern trauen, denn die Toten hegen einen Groll gegen die, die ihnen das Jenseits vorenthalten.“</p><p>– Aila Blutmesser</p>",
+      "gminfo": ""
+    },
+    "characteristic1": "mu",
+    "characteristic2": "ch",
+    "effect": "Eine durch die Gabe Seelenbindung in einen Schädel gebundene Seele materialisiert sich neben dem Zerzalkind. Die Seele nimmt dabei eine meist recht morbide Version seiner früheren Gestalt an. Sie tut, was das Zerzalkind von ihr verlangt, soweit es im Rahmen ihrer Fähigkeiten liegt und sie sich vom Schädel nicht weiter als 16 Schritt entfernt. Der so materialisierte Leib der Seele ist zwar physisch greifbar und damit auch verletzlich, jedoch nur ein Provisorium.\nDer Leib einer Vogelseele kann nicht fliegen, der einer Schlange ist nicht giftig, usw. Der Geist nimmt nicht die Zwischenwelt wahr, sondern nur das Diesseits, als hätte er Augen und Ohren.\nWird der Diener dazu gezwungen, zu kämpfen, gelten folgende Werte, unabhängig von dem Erscheinungsbild der Gestalt. Fallen seine LE auf 0, verschwindet der Leib und die Seele wandert zurück in den Schädel. Sie kann die nächsten 7 Tage nicht mehr durch Geisterdiener ins Diesseits gezwungen werden.",
+    "effectFormula": "",
+    "duration": "QS Minuten",
+    "AeP": "8",
+    "distribution": "Zerzal (Jagd)",
+    "StF": "B",
+    "targetCategory": "Geist",
+    "range": "Berührung",
+    "level": 0,
+    "resist": "-"
+  },
+  "folder": "Bfgy2Rjd3j1lTvPi",
+  "flags": {},
+  "_stats": {
+    "compendiumSource": "Item.wU2i8FENcqH6WplV",
+    "duplicateSource": null,
+    "exportSource": {
+      "worldId": "dsk-zum-erstellen",
+      "uuid": "Item.ID7gNmVDPGkhN8ro",
+      "coreVersion": "13.351",
+      "systemId": "dsk",
+      "systemVersion": "4.2.8"
+    },
+    "coreVersion": "13.351",
+    "systemId": "dsk",
+    "systemVersion": "4.2.8",
+    "createdTime": 1787737793200,
+    "modifiedTime": 1787737807112,
+    "lastModifiedBy": "9CRVH1u8nNgMxGRR"
+  },
+  "ownership": {
+    "default": 0
+  }
+}

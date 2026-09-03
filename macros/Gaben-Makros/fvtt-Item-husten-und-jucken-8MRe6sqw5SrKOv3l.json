@@ -1,0 +1,95 @@
+{
+  "name": "Husten und Jucken",
+  "img": "https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/DSK/Allgemein_Glaubenssymbole/Aphasma.webp",
+  "effects": [
+    {
+      "name": "Husten und Jucken",
+      "img": "icons/svg/aura.svg",
+      "origin": "Actor.m4lI1pf9uG0ZHLTg.Item.tUIZuReVY8azYLKU",
+      "flags": {
+        "dsk": {
+          "value": null,
+          "description": "",
+          "auto": null,
+          "manual": 0,
+          "hideOnToken": false,
+          "hidePlayers": false,
+          "customDuration": "",
+          "advancedFunction": "2",
+          "resistRoll": "",
+          "args3": "// ==========================================\n// ⚙️ KONFIGURATION: GABEN-DETAILS HIER EINTRAGEN\n// ==========================================\nconst gabenName = \"Husten und Jucken (Aphasma)\";\nconst aepKosten = 8;\nconst macroLink = \"@UUID[Compendium.dsk-havena-und-umland.makros.Macro.MWaPOIMjVSzJGNiv]{Husten und Jucken wirken}\";\nconst iconBild = \"https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/modules/dsk-core/icons/journal/image-440.webp\"; // Standard Aphasma Icon\n// ==========================================\n\n(async () => {\n    // --- 1. SICHERHEITS-CHECK: FRAMEWORK LADEN ---\n    if (!globalThis.DSK) {\n        const fwMacro = await fromUuid(\"Compendium.dsk-havena-und-umland.makros.Macro.fHQ2OuDo3Fe3spBn\");\n        if (fwMacro) await fwMacro.execute();\n        await new Promise(resolve => setTimeout(resolve, 150)); \n    }\n    if (!globalThis.DSK) return ui.notifications.error(\"Luna sagt 🌙: Das DSK-Framework konnte nicht geladen werden!\");\n    \n    // --- 2. WIRKENDEN AKTEUR ERMITTELN ---\n    let wirkenderActor = null;\n    if (typeof actor !== \"undefined\" && actor) wirkenderActor = actor; \n    else if (typeof testData !== \"undefined\" && testData && testData.speaker) wirkenderActor = game.actors.get(testData.speaker.actor);\n    if (!wirkenderActor) wirkenderActor = canvas.tokens.controlled[0]?.actor;\n    if (!wirkenderActor) wirkenderActor = game.user.character;\n\n    if (!wirkenderActor) return ui.notifications.warn(\"Luna sagt 🌙: Ich konnte den Wirkenden nicht finden!\");\n\n    // --- 3. ROBUSTE QS-ERMITTLUNG (Der Panzerglas-Schutz!) ---\n    let ermittelteQS = 1;\n    let rollData = (typeof testData !== \"undefined\" && testData) ? testData : ((typeof args !== \"undefined\" && args[0]) ? args[0] : null);\n    \n    if (rollData && (rollData.qualityStep !== undefined || rollData.result?.QL !== undefined)) {\n        ermittelteQS = Number(rollData.qualityStep || rollData.result?.QL || 1);\n    } else {\n        // FALLBACK: Das Makro sucht die letzte Probe im Chat und liest die QS aus!\n        const lastRollMsg = game.messages.contents.slice().reverse().find(m => \n            m.speaker?.actor === wirkenderActor.id && \n            m.content && \n            m.content.includes(\"Qualitätsstufe\")\n        );\n        if (lastRollMsg) {\n            const qsMatch = lastRollMsg.content.match(/Qualitätsstufe(?:[^0-9]+)(\\d+)/i);\n            if (qsMatch && qsMatch[1]) {\n                ermittelteQS = Number(qsMatch[1]);\n            }\n        }\n    }\n    \n    // --- 4. AKTUELLE AeP AUSLESEN & PRÜFEN ---\n    const currentAeP = foundry.utils.getProperty(wirkenderActor, \"system.stats.AeP.value\") || 0;\n    \n    let htmlInhalt = \"\";\n    let topHeader = \"\";\n\n    if (currentAeP < aepKosten) {\n        topHeader = \"Fehlschlag\";\n        await wirkenderActor.update({ \"system.stats.AeP.value\": 0 });\n        htmlInhalt = `\n            <p style=\"margin-bottom: 8px;\"><b>${wirkenderActor.name}</b> hat versucht, die Gabe zu wirken.</p>\n            <hr style=\"margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;\">\n            <p style=\"margin-bottom: 8px; color: #8b0000;\"><b>Fehlschlag!</b> Die Kraft reicht nicht aus.</p>\n            <p style=\"margin-bottom: 8px;\">Die restlichen <b>${currentAeP} AeP</b> wurden verbraucht, aber die Gabe schlägt fehl.</p>\n        `;\n    } else {\n        topHeader = \"Wirkungsbeginn\"; \n        \n        // Die ermittelte QS wird für das Wirkungs-Makro sicher abgespeichert\n        await wirkenderActor.setFlag(\"world\", \"letzteGabenQS\", ermittelteQS);\n        await wirkenderActor.update({ \"system.stats.AeP.value\": currentAeP - aepKosten });\n        \n        htmlInhalt = `\n            <p style=\"margin-bottom: 8px;\"><b>${wirkenderActor.name}</b> hat die Gabe gewirkt.</p>\n            <hr style=\"margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;\">\n            <p style=\"margin-bottom: 8px; color: #76301b;\"><b>Kosten:</b> Die AeP in Höhe von <b>${aepKosten}</b> sind abgezogen worden.</p>\n            <hr style=\"margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;\">\n            <p style=\"margin-bottom: 8px;\">Bitte markiere (Target) dein Ziel und klicke hier:</p>\n            <span style=\"font-size: 15px;\">${macroLink}</span>\n        `;\n    }\n    \n    // --- 5. CHAT-NACHRICHT BAUEN & SENDEN ---\n    await ChatMessage.create({\n        speaker: { alias: \"System\" },\n        content: `\n        <div style=\"font-family: 'Signika', sans-serif;\">\n            <div class=\"dskbox1\">\n                <p style=\"display:flex; gap:8px; align-items:center; margin:0;\"><img src=\"${iconBild}\" style=\"width:28px;\"><b style=\"font-size:1.05em;\">${topHeader}</b></p>\n                <p style=\"font-weight:bold; margin-top:6px; margin-bottom:0;\">${gabenName}</p>\n            </div>\n            <div class=\"dskbox2\" style=\"margin-top:10px; text-align: center;\">${htmlInhalt}</div>\n        </div>`\n    });\n})();",
+          "onRemove": ""
+        }
+      },
+      "_id": "8f2ZqFxe4mzGutNn",
+      "type": "base",
+      "system": {},
+      "changes": [],
+      "disabled": false,
+      "duration": {
+        "startTime": null,
+        "combat": null,
+        "seconds": null,
+        "rounds": null,
+        "turns": null,
+        "startRound": null,
+        "startTurn": null
+      },
+      "description": "",
+      "tint": "#ffffff",
+      "transfer": true,
+      "statuses": [],
+      "sort": 0,
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "dsk",
+        "systemVersion": "4.2.8",
+        "lastModifiedBy": null
+      }
+    }
+  ],
+  "type": "ahnengabe",
+  "system": {
+    "description": {
+      "value": "<p>„Menschen sind so naiv. Sie glauben, es wären unsere Haare, dabei ist es unsere Rache! Putze dich und lass sie leiden für ihre Taten.“</p><p>– Kara Federglanz</p>",
+      "gminfo": ""
+    },
+    "characteristic1": "in",
+    "characteristic2": "ch",
+    "effect": "Diese Ahnengabe löst bei Menschen die typischen Symptome einer Allergie auf Katzenhaare aus. Ihre Augen röten sich, ihr Nase läuft und sie kriegen im schlimmsten Falle Atemnot.\nQS 1: gerötete Augen, juckende Nase (-1 bei Proben auf Fertigkeiten und Eigenschaften)\nQS 2: zusätzlich laufende Nase, starker Niesreiz (-2 bei Proben auf Fertigkeiten und Eigenschaften)\nQS 3: zusätzlich Atemschwierigkeiten (-3 bei Proben auf Fertigkeiten und Eigenschaften)\nQS 4: zusätzlich starker Juckreiz (-4 bei Proben auf Fertigkeiten und Eigenschaften)\nQS 5: zusätzlich Ausschlag (-5 bei Proben auf Fertigkeiten und Eigenschaften)\nQS 6: zusätzlich starker Ausschlag mit roten Pusteln (-6 bei Proben auf Fertigkeiten und Eigenschaften)",
+    "effectFormula": "",
+    "duration": "QS x 2 Minuten",
+    "AeP": "8",
+    "distribution": "Aphasma (Schicksal)",
+    "StF": "B",
+    "targetCategory": "Menschen",
+    "range": "4 Schritt",
+    "level": 0,
+    "resist": "sk"
+  },
+  "folder": "Bfgy2Rjd3j1lTvPi",
+  "flags": {},
+  "_stats": {
+    "compendiumSource": "Item.hcogDDT2v7i0TFBf",
+    "duplicateSource": null,
+    "exportSource": {
+      "worldId": "dsk-zum-erstellen",
+      "uuid": "Item.8MRe6sqw5SrKOv3l",
+      "coreVersion": "13.351",
+      "systemId": "dsk",
+      "systemVersion": "4.2.8"
+    },
+    "coreVersion": "13.351",
+    "systemId": "dsk",
+    "systemVersion": "4.2.8",
+    "createdTime": 1787739484988,
+    "modifiedTime": 1787739484988,
+    "lastModifiedBy": "9CRVH1u8nNgMxGRR"
+  },
+  "ownership": {
+    "default": 0
+  }
+}

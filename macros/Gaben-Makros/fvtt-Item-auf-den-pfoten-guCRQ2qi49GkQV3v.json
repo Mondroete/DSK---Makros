@@ -1,0 +1,95 @@
+{
+  "name": "Auf den Pfoten",
+  "img": "https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/DSK/Allgemein_Glaubenssymbole/Zerzal.webp",
+  "effects": [
+    {
+      "name": "Auf den Pfoten",
+      "img": "https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/DSK/Allgemein_Glaubenssymbole/Zerzal.webp",
+      "origin": "Item.HFNPmS7PLi49B0Lx",
+      "flags": {
+        "dsk": {
+          "value": null,
+          "description": "",
+          "auto": null,
+          "manual": 0,
+          "hideOnToken": false,
+          "hidePlayers": false,
+          "customDuration": "",
+          "advancedFunction": "2",
+          "resistRoll": "",
+          "args3": "// ==========================================\n// ⚙️ KONFIGURATION: GABEN-DETAILS HIER EINTRAGEN\n// ==========================================\nconst gabenName = \"Auf den Pfoten (Zerzal)\";\nconst aepKosten = 4;\nconst macroLink = \"@UUID[Compendium.dsk-havena-und-umland.makros.Macro.9Z2QYfDHg2yf7JKl]{Pfoten wirken}\";\nconst iconBild = \"https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/systems/dsk/icons/categories/ahnengabe.webp\";\n// ==========================================\n\n(async () => {\n    // --- 1. SICHERHEITS-CHECK: FRAMEWORK LADEN ---\n    if (typeof DSK === \"undefined\" || !globalThis.DSK) {\n        const fwMacro = await fromUuid(\"Compendium.dsk-havena-und-umland.makros.Macro.fHQ2OuDo3Fe3spBn\");\n        if (fwMacro) await fwMacro.execute();\n        await new Promise(resolve => setTimeout(resolve, 150)); \n    }\n\n    if (typeof DSK === \"undefined\" && !globalThis.DSK) {\n        return ui.notifications.error(\"Luna sagt 🌙: Das DSK-Framework konnte nicht geladen werden!\");\n    }\n    const DSK_FW = globalThis.DSK || DSK; \n\n    // --- 2. AKTEUR ERMITTELN (Aus Chatkarte oder Token) ---\n    let wirkenderActor = null;\n    if (typeof actor !== \"undefined\" && actor) {\n        wirkenderActor = actor; \n    } else if (typeof testData !== \"undefined\" && testData && testData.speaker) {\n        wirkenderActor = game.actors.get(testData.speaker.actor);\n    }\n    if (!wirkenderActor) wirkenderActor = canvas.tokens.controlled[0]?.actor;\n    if (!wirkenderActor) wirkenderActor = game.user.character;\n\n    if (!wirkenderActor) {\n        return ui.notifications.warn(\"Luna sagt 🌙: Ich konnte den Wirkenden nicht finden!\");\n    }\n    \n    // --- 3. AKTUELLE AeP AUSLESEN & PRÜFEN ---\n    const currentAeP = foundry.utils.getProperty(wirkenderActor, \"system.stats.AeP.value\") || 0;\n    \n    let htmlInhalt = \"\";\n    let topHeader = \"\";\n\n    if (currentAeP < aepKosten) {\n        // FEHLSCHLAG: Nicht genug Kraft\n        topHeader = \"Fehlschlag\";\n        \n        // Zieht alle verbleibenden AeP ab (setzt sie auf 0)\n        await wirkenderActor.update({ \"system.stats.AeP.value\": 0 });\n        \n        htmlInhalt = `\n            <p style=\"margin-bottom: 8px;\"><b>${wirkenderActor.name}</b> hat versucht, die Gabe zu wirken.</p>\n            <hr style=\"margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;\">\n            <p style=\"margin-bottom: 8px; color: #8b0000;\"><b>Fehlschlag!</b> Die Kraft reicht nicht aus.</p>\n            <p style=\"margin-bottom: 8px;\">Die restlichen <b>${currentAeP} AeP</b> wurden verbraucht, aber die Gabe schlägt fehl.</p>\n        `;\n    } else {\n        // ERFOLG: Genug Kraft\n        topHeader = \"Wirkungsbeginn\"; \n        \n        let ermittelteQS = 1;\n        if (typeof testData !== \"undefined\") {\n            ermittelteQS = Number(testData?.result?.QL || testData?.qualityStep || 1);\n        }\n        await wirkenderActor.setFlag(\"world\", \"letzteGabenQS\", ermittelteQS);\n        \n        // Kosten abziehen\n        await wirkenderActor.update({ \"system.stats.AeP.value\": currentAeP - aepKosten });\n        \n        htmlInhalt = `\n            <p style=\"margin-bottom: 8px;\"><b>${wirkenderActor.name}</b> hat die Gabe gewirkt.</p>\n            <hr style=\"margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;\">\n            <p style=\"margin-bottom: 8px; color: #76301b;\"><b>Kosten:</b> Die AeP in Höhe von <b>${aepKosten}</b> sind abgezogen worden.</p>\n            <hr style=\"margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;\">\n            <p style=\"margin-bottom: 8px;\">Bitte wähle Ziel(e) per Target und klicke hier:</p>\n            <span style=\"font-size: 15px;\">${macroLink}</span>\n        `;\n    }\n    \n    // --- 4. CHAT-NACHRICHT BAUEN & SENDEN ---\n    const contentHtml = `\n        <div style=\"font-family: 'Signika', sans-serif;\">\n            <div class=\"dskbox1\">\n                <p style=\"display:flex; gap:8px; align-items:center;\">\n                    <img src=\"${iconBild}\" style=\"width:28px; border:none; background:transparent;\">\n                    <b>${topHeader}</b>\n                </p>\n                <p style=\"font-weight:bold; margin-top:6px;\">${gabenName}</p>\n            </div>\n            <div class=\"dskbox2\" style=\"margin-top:10px; text-align: center;\">\n                ${htmlInhalt}\n            </div>\n        </div>\n    `;\n    \n    await ChatMessage.create({\n        speaker: { alias: \"System\" },\n        content: contentHtml\n    });\n})();",
+          "onRemove": ""
+        }
+      },
+      "_id": "LHrbfLwR81QIWxB8",
+      "type": "base",
+      "system": {},
+      "changes": [],
+      "disabled": false,
+      "duration": {
+        "startTime": 1782131407,
+        "combat": null,
+        "seconds": null,
+        "rounds": null,
+        "turns": null,
+        "startRound": null,
+        "startTurn": null
+      },
+      "description": "",
+      "tint": "#ffffff",
+      "transfer": true,
+      "statuses": [],
+      "sort": 0,
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "dsk",
+        "systemVersion": "4.2.8",
+        "lastModifiedBy": null
+      }
+    }
+  ],
+  "type": "ahnengabe",
+  "system": {
+    "description": {
+      "value": "<p>„Reibe die Hände aneinander, schaue in den Abgrund und flüstere ‚Vater, fang mich auf.‘ Dann spring und lande auf deinen Pfoten.“</p><p>– Kieran Nachtgesicht</p>",
+      "gminfo": ""
+    },
+    "characteristic1": "ge",
+    "characteristic2": "ff",
+    "effect": "Wenn das Ziel innerhalb der Wirkungsdauer fällt, wird bei der Berechnung des Sturzschadens die gefallene Strecke um 2 Schritt pro QS verringert.",
+    "effectFormula": "",
+    "duration": "QS Minuten",
+    "AeP": "4",
+    "distribution": "Zerzal (Jagd)",
+    "StF": "A",
+    "targetCategory": "Lebewesen",
+    "range": "Berührung",
+    "level": 0,
+    "resist": "-"
+  },
+  "folder": "Bfgy2Rjd3j1lTvPi",
+  "flags": {},
+  "_stats": {
+    "compendiumSource": "Item.HFNPmS7PLi49B0Lx",
+    "duplicateSource": null,
+    "exportSource": {
+      "worldId": "dsk-zum-erstellen",
+      "uuid": "Item.guCRQ2qi49GkQV3v",
+      "coreVersion": "13.351",
+      "systemId": "dsk",
+      "systemVersion": "4.2.8"
+    },
+    "coreVersion": "13.351",
+    "systemId": "dsk",
+    "systemVersion": "4.2.8",
+    "createdTime": 1787737750304,
+    "modifiedTime": 1787737807112,
+    "lastModifiedBy": "9CRVH1u8nNgMxGRR"
+  },
+  "ownership": {
+    "default": 0
+  }
+}

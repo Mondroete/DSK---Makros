@@ -1,0 +1,30 @@
+{
+  "folder": "13pY61Dh0lQoEeW8",
+  "name": "Mäusemeister",
+  "type": "script",
+  "author": "9CRVH1u8nNgMxGRR",
+  "img": "https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/modules/dsk-core/icons/journal/image-440.webp",
+  "scope": "global",
+  "command": "// ======================================================================\n// === GABE: MÄUSEMEISTER (APHASMA) =====================================\n// ======================================================================\n\nconst gabenName = \"Mäusemeister (Aphasmakind)\";\nconst effektName = `Aktiver Effekt: Mäusemeister`;\nconst symbolPfad = \"https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/modules/dsk-core/icons/journal/image-440.webp\";\n\n// QS aus Testergebnis oder Standard 1\nconst qsWert = Number(testData?.result?.QL || testData?.qualityStep || 1);\nif (qsWert <= 0) return ui.notifications.warn(\"Die Probe ist fehlgeschlagen.\");\n\nconst dauerMinuten = qsWert;\n\n// 1. EFFEKT SETZEN\nlet alterEffekt = actor.effects.find(e => e.name === effektName);\nif (alterEffekt) await alterEffekt.delete();\n\nawait actor.createEmbeddedDocuments(\"ActiveEffect\", [{\n    name: effektName, \n    icon: symbolPfad, \n    disabled: false, \n    origin: actor.uuid, \n    duration: { minutes: dauerMinuten },\n    changes: [{\n        key: \"flags.dsk.status\", \n        mode: 2, \n        value: \"Verwandelt in Maus\",\n        priority: 20\n    }]\n}]);\n\n// 2. CHAT-NACHRICHT (FESTES LAYOUT)\nconst html = `\n<div style=\"font-family: 'Signika', sans-serif;\">\n    <div class=\"dskbox1\">\n        <p style=\"display:flex; align-items:center; gap:8px;\">\n            <img src=\"${symbolPfad}\" style=\"width:28px;\"> <b>Ahnengabe</b>\n        </p>\n        <p style=\"text-align:center; font-weight:bold; margin-top:6px;\">${gabenName}</p>\n    </div>\n    <div class=\"dskbox2\" style=\"margin-top:10px;\">\n        <p>🔮 <b>${actor.name}</b> wirkt Mäusemeister.</p>\n        <p>• <b>Verwandlung:</b> @UUID[Compendium.dsk-core.corebestiary.Actor.BaGVz4HqAZ0QXxsi]{Maus}<br>\n        <i style=\"font-size: 0.9em;\">Das Ziel behält einen Teil seines Geistes, übernimmt jedoch die körperlichen Fähigkeiten einer Maus.</i></p>\n        <hr>\n        <p>🟡 <b>Wirkungsdauer:</b> ${dauerMinuten} Minuten</p>\n    </div>\n</div>`;\n\nawait ChatMessage.create({\n    content: html,\n    speaker: { alias: gabenName }\n});",
+  "flags": {},
+  "_stats": {
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": {
+      "worldId": "dsk-zum-erstellen",
+      "uuid": "Macro.ZqRGlygccdrKw2R0",
+      "coreVersion": "13.351",
+      "systemId": "dsk",
+      "systemVersion": "4.2.8"
+    },
+    "coreVersion": "13.351",
+    "systemId": "dsk",
+    "systemVersion": "4.2.8",
+    "createdTime": 1788443949993,
+    "modifiedTime": 1788443949993,
+    "lastModifiedBy": "9CRVH1u8nNgMxGRR"
+  },
+  "ownership": {
+    "default": 0
+  }
+}

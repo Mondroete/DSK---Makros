@@ -1,0 +1,95 @@
+{
+  "name": "Klemmende Tür",
+  "img": "https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/DSK/Allgemein_Glaubenssymbole/Rondra.webp",
+  "effects": [
+    {
+      "name": "Klemmende Tür",
+      "img": "https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/DSK/Allgemein_Glaubenssymbole/Rondra.webp",
+      "origin": "Actor.m4lI1pf9uG0ZHLTg.Item.zZPZWmayySVs5d64",
+      "flags": {
+        "dsk": {
+          "value": null,
+          "description": "",
+          "auto": null,
+          "manual": 0,
+          "hideOnToken": false,
+          "hidePlayers": false,
+          "customDuration": "",
+          "advancedFunction": "2",
+          "resistRoll": "",
+          "args3": "// ==========================================\n// ⚙️ KONFIGURATION: GABEN-DETAILS HIER EINTRAGEN\n// ==========================================\nconst gabenName = \"Klemmende Tür (Rondra)\";\nconst aepKosten = 4;\nconst macroLink = \"@UUID[Compendium.dsk-havena-und-umland.makros.Macro.0G1Db4njL2bo21GY]{Tür verklemmen}\";\nconst iconBild = \"https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/systems/dsk/icons/categories/ahnengabe.webp\";\n// ==========================================\n\n(async () => {\n    // --- 1. SICHERHEITS-CHECK: FRAMEWORK LADEN ---\n    if (typeof DSK === \"undefined\" || !globalThis.DSK) {\n        const fwMacro = await fromUuid(\"Compendium.dsk-havena-und-umland.makros.Macro.fHQ2OuDo3Fe3spBn\");\n        if (fwMacro) await fwMacro.execute();\n        await new Promise(resolve => setTimeout(resolve, 150)); \n    }\n\n    if (typeof DSK === \"undefined\" && !globalThis.DSK) {\n        return ui.notifications.error(\"Luna sagt 🌙: Das DSK-Framework konnte nicht geladen werden!\");\n    }\n    const DSK_FW = globalThis.DSK || DSK; \n\n    // --- 2. AKTEUR ERMITTELN (Aus Chatkarte oder Token) ---\n    let wirkenderActor = null;\n    if (typeof actor !== \"undefined\" && actor) {\n        wirkenderActor = actor; \n    } else if (typeof testData !== \"undefined\" && testData && testData.speaker) {\n        wirkenderActor = game.actors.get(testData.speaker.actor);\n    }\n    if (!wirkenderActor) wirkenderActor = canvas.tokens.controlled[0]?.actor;\n    if (!wirkenderActor) wirkenderActor = game.user.character;\n\n    if (!wirkenderActor) {\n        return ui.notifications.warn(\"Luna sagt 🌙: Ich konnte den Wirkenden nicht finden!\");\n    }\n    \n    // --- 3. AKTUELLE AeP AUSLESEN & PRÜFEN ---\n    const currentAeP = foundry.utils.getProperty(wirkenderActor, \"system.stats.AeP.value\") || 0;\n    \n    let htmlInhalt = \"\";\n    let topHeader = \"\";\n\n    if (currentAeP < aepKosten) {\n        // FEHLSCHLAG: Nicht genug Kraft\n        topHeader = \"Fehlschlag\";\n        \n        await wirkenderActor.update({ \"system.stats.AeP.value\": 0 });\n        \n        htmlInhalt = `\n            <p style=\"margin-bottom: 8px;\"><b>${wirkenderActor.name}</b> hat versucht, die Gabe zu wirken.</p>\n            <hr style=\"margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;\">\n            <p style=\"margin-bottom: 8px; color: #8b0000;\"><b>Fehlschlag!</b> Die Kraft reicht nicht aus.</p>\n            <p style=\"margin-bottom: 8px;\">Die restlichen <b>${currentAeP} AeP</b> wurden verbraucht, aber die Gabe schlägt fehl.</p>\n        `;\n    } else {\n        // ERFOLG: Genug Kraft\n        topHeader = \"Wirkungsbeginn\"; \n        \n        let ermittelteQS = 1;\n        if (typeof testData !== \"undefined\") {\n            ermittelteQS = Number(testData?.result?.QL || testData?.qualityStep || 1);\n        }\n        await wirkenderActor.setFlag(\"world\", \"letzteGabenQS\", ermittelteQS);\n        \n        await wirkenderActor.update({ \"system.stats.AeP.value\": currentAeP - aepKosten });\n        \n        htmlInhalt = `\n            <p style=\"margin-bottom: 8px;\"><b>${wirkenderActor.name}</b> hat die Gabe gewirkt.</p>\n            <hr style=\"margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;\">\n            <p style=\"margin-bottom: 8px; color: #76301b;\"><b>Kosten:</b> Die AeP in Höhe von <b>${aepKosten}</b> sind abgezogen worden.</p>\n            <hr style=\"margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;\">\n            <p style=\"margin-bottom: 8px;\">Bitte klicke hier, um die Tür zu markieren:</p>\n            <span style=\"font-size: 15px;\">${macroLink}</span>\n        `;\n    }\n    \n    // --- 4. CHAT-NACHRICHT BAUEN & SENDEN ---\n    const contentHtml = `\n        <div style=\"font-family: 'Signika', sans-serif;\">\n            <div class=\"dskbox1\">\n                <p style=\"display:flex; gap:8px; align-items:center; margin:0; white-space:nowrap;\">\n                    <img src=\"${iconBild}\" style=\"width:28px; height:28px; border:none; background:transparent; flex-shrink:0;\">\n                    <b style=\"font-size: 1.05em;\">${topHeader}</b>\n                </p>\n                <p style=\"font-weight:bold; margin-top:6px; margin-bottom:0;\">${gabenName}</p>\n            </div>\n            <div class=\"dskbox2\" style=\"margin-top:10px; text-align: center;\">\n                ${htmlInhalt}\n            </div>\n        </div>\n    `;\n    \n    await ChatMessage.create({\n        speaker: { alias: \"System\" },\n        content: contentHtml\n    });\n})();",
+          "onRemove": ""
+        }
+      },
+      "_id": "7glBdxJnHnjX8daw",
+      "type": "base",
+      "system": {},
+      "changes": [],
+      "disabled": false,
+      "duration": {
+        "startTime": null,
+        "combat": null,
+        "seconds": null,
+        "rounds": null,
+        "turns": null,
+        "startRound": null,
+        "startTurn": null
+      },
+      "description": "",
+      "tint": "#ffffff",
+      "transfer": true,
+      "statuses": [],
+      "sort": 0,
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "dsk",
+        "systemVersion": "4.2.8",
+        "lastModifiedBy": null
+      }
+    }
+  ],
+  "type": "ahnengabe",
+  "system": {
+    "description": {
+      "value": "<p>„Drück die Tür zu, halte sie fest mit beiden Pfoten und fordere ‚Bleib!‘. Was auch immer hinter ihr liegen mag, wird dir nicht folgen können.“</p><p>– Ruandora Klingentanz</p>",
+      "gminfo": ""
+    },
+    "characteristic1": "ch",
+    "characteristic2": "kk",
+    "effect": "Das Rondrakind kann eine Tür, Luke oder einen Deckel so verklemmen, dass sie sich während der Wirkungsdauer auch mit Gewalt nicht mehr öffnen lässt. Es ist jedoch weiterhin möglich, die Tür zu zerstören, um sich einen Durchgang zu schaffen.",
+    "effectFormula": "",
+    "duration": "QS x 5 Minuten",
+    "AeP": "4",
+    "distribution": "Rondra (Schutz)",
+    "StF": "A",
+    "targetCategory": "Objekt",
+    "range": "Berührung",
+    "level": 0,
+    "resist": "-"
+  },
+  "folder": "Bfgy2Rjd3j1lTvPi",
+  "flags": {},
+  "_stats": {
+    "compendiumSource": "Item.WGgFHmaOsM2EEjUo",
+    "duplicateSource": null,
+    "exportSource": {
+      "worldId": "dsk-zum-erstellen",
+      "uuid": "Item.u6EbAHuRZYXP5cEr",
+      "coreVersion": "13.351",
+      "systemId": "dsk",
+      "systemVersion": "4.2.8"
+    },
+    "coreVersion": "13.351",
+    "systemId": "dsk",
+    "systemVersion": "4.2.8",
+    "createdTime": 1788174071527,
+    "modifiedTime": 1788174071527,
+    "lastModifiedBy": "9CRVH1u8nNgMxGRR"
+  },
+  "ownership": {
+    "default": 0
+  }
+}
