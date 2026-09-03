@@ -3,7 +3,6 @@
    Dateipfad: macros/Gaben-Makros/Framework/dsk-framework.js
    Autor: Mondroete
 */
-
 // ============================================================
 // === BLOCK 0 — GLOBAL INITIALISIERUNG ========================
 // ============================================================
@@ -11,7 +10,7 @@
 if (!globalThis.DSK) globalThis.DSK = {};
 const DSK = globalThis.DSK;
 
-DSK.version = "13.02"; // Mit Block 15: Sicht & Entdeckungsmodi 🌙
+DSK.version = "13.03; // Mit Block 15: Sicht & Entdeckungsmodi 🌙
 
 // ============================================================
 // === TOKEN-NAMEN SAUBER ERMITTELN (SZENENNAME) ===============
@@ -243,7 +242,7 @@ DSK.EffektEnde = {
                     }
                 }
 
-                const html = `<div class="dskbox1"><p style="display:flex; gap:8px; align-items:center;"><img src="${icon}" style="width:28px;"><b>Wirkungsende</b></p><p style="font-weight:bold; margin-top:6px;">${basisEffektName}</p></div><div class="dskbox2" style="margin-top:10px;"><p>${beschreibungFuerEnde}</p> Einheiten/Erschwernnisse verflogen.<hr><p><b>Effekt beendet auf:</b></p><ul class="dsklist">${namenListe.map(n => `<li>${n}</li>`).join("")}</ul></div>`;
+                const html = `<div class="dskbox1"><p style="display:flex; gap:8px; align-items:center;"><img src="${icon}" style="width:28px;"><b>Wirkungsende</b></p><p style="font-weight:bold; margin-top:6px;">${basisEffektName}</p></div><div class="dskbox2" style="margin-top:10px;"><p>${beschreibungFuerEnde}</p> Einheiten/Erschwernisse verflogen.<hr><p><b>Effekt beendet auf:</b></p><ul class="dsklist">${namenListe.map(n => `<li>${n}</li>`).join("")}</ul></div>`;
                 
                 ChatMessage.create({ 
                     whisper: Array.from(ownerIds).filter(id => game.users.get(id)), 
@@ -628,14 +627,16 @@ DSK.EffektKarteAktivierung = {
 };
 
 // ============================================================
-// === BLOCK 10 — LIVE-ÜBERWACHUNG ============================
+// === BLOCK 10 — LIVE-ÜBERWACHUNG & WÄCHTER-HOOKS ============
 // ============================================================
 
 DSK.LiveUeberwachung = {
+    _initialized: false,
     Init() {
-        if (globalThis._dskLiveHookActive) return;
-        globalThis._dskLiveHookActive = true;
+        if (this._initialized) return;
+        this._initialized = true;
 
+        // 1. Alter Schleier-Hook
         Hooks.on("createActiveEffect", (effect) => {
             const effName = (effect.name || effect.label || "").toLowerCase();
             if (effName.includes("schleier")) {
@@ -644,7 +645,78 @@ DSK.LiveUeberwachung = {
                 console.log(`[DSK Live-Überwachung] Effekt aktiv auf: ${tokenName}`);
             }
         });
-        console.log("DSK Live-Überwachung erfolgreich gestartet.");
+
+        // 2. 🌙 LUNAS WÄCHTER: VERBORGENER WURF (Chat-Scanner)
+        Hooks.on("createChatMessage", async (msgObj) => {
+            if (msgObj.speaker?.alias === "System" || msgObj.flags?.dsk?.isWatcherMsg) return;
+            
+            const authorId = msgObj.author?.id || msgObj.user?.id;
+            if (authorId !== game.user.id) return; // Nur der Würfelnde rechnet
+
+            const rawContent = String(msgObj.flavor || "") + " " + String(msgObj.content || "");
+            if (!rawContent.toLowerCase().includes("sinnessch")) return;
+
+            let hoechsteQS = 0;
+            let alleVerborgenenNamen = [];
+            
+            for (let t of canvas.tokens.placeables) {
+                if (t.actor) {
+                    const buff = t.actor.effects.find(e => e.getFlag("dsk", "isVerborgenerWurf"));
+                    if (buff) {
+                        const qs = buff.getFlag("dsk", "qs") || 1;
+                        if (qs > hoechsteQS) hoechsteQS = qs;
+                        alleVerborgenenNamen.push(t.name);
+                    }
+                }
+            }
+
+            if (alleVerborgenenNamen.length === 0) return; // Niemand verborgen -> abbruch
+
+            const erschwernis = hoechsteQS * 2;
+            const angreiferName = msgObj.speaker?.alias || "Ein Suchender";
+            const iconBild = DSK.Symbol("Rondra");
+            const finalEffektName = "Verborgener Wurf (Rondra)";
+
+            const mathHtml = `
+                <p style="margin-bottom: 8px;">Wenn du versuchst, jemanden wahrzunehmen, greift der Effekt <b>Verborgener Wurf</b>.</p>
+                <p style="margin-bottom: 4px; font-weight: bold; color: #76301b;">Vorgehen:</p>
+                <ul class="dsklist" style="margin-top: 0; margin-bottom: 0;">
+                    <li>Ziehe <b>${erschwernis}</b> von deinem Probenwert ab.</li>
+                    <li>Vergleiche den Wurf mit dem neuen Wert.</li>
+                    <li><b style="color: #18940F;">Erfolg:</b> Habe bitte einen Moment Geduld, der SL beschreibt dir gleich, was du entdeckst.</li>
+                    <li><b style="color: #B30000;">Misserfolg:</b> Du nimmst nichts wahr.</li>
+                </ul>
+            `;
+
+            const whisperHtml = `
+                <div style="font-family: 'Signika', sans-serif;">
+                    <div class="dskbox1">
+                        <p style="display:flex; gap:8px; align-items:center; margin:0;">
+                            <img src="${iconBild}" style="width:28px; border:none; background:transparent;">
+                            <b>Information</b>
+                        </p>
+                        <p style="font-weight:bold; margin-top:6px; margin-bottom:0;">${finalEffektName}</p>
+                    </div>
+                    <div class="dskbox2" style="margin-top:10px; color:#000; font-size:0.95em;">
+                        <p style="margin-bottom: 8px;"><b>${angreiferName}</b> hat eine Sinnesschärfe-Probe abgelegt.</p>
+                        <hr style="margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;">
+                        ${mathHtml}
+                    </div>
+                </div>
+            `;
+
+            let whisperIds = new Set(game.users.filter(u => u.isGM).map(u => u.id));
+            if (authorId) whisperIds.add(authorId);
+
+            await ChatMessage.create({
+                whisper: Array.from(whisperIds),
+                content: whisperHtml,
+                speaker: { alias: "System" },
+                flags: { dsk: { isWatcherMsg: true } }
+            });
+        });
+
+        console.log("DSK Live-Überwachung & Wächter-Hooks erfolgreich gestartet.");
     }
 };
 DSK.LiveUeberwachung.Init();
