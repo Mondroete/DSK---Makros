@@ -11,23 +11,23 @@ Wir kopieren das Makro für die Gaben in ein eigenes Makro Skript, damit sie jed
 **Schritt 3: UUID für das Framework austauschen**  
 Nun tauschen wir die UUID aus, da ich hier nur meine Makros abgespeichert habe und nicht die ganzen Dateien.
 
-![Framework – UUID kopieren](https://raw.githubusercontent.com/Mondroete/DSK---Makros/main/macros/Bilder/01-framework-uuid.png)
-
 *Bild 1: Öffne das Framework‑Macro im Macro‑Compendium. Oben rechts findest du "Copy UUID". Ersetze die UUID im Makro durch deine eigene, sonst kommt der Fehler "DSK is undefined".*
+
+![Framework – UUID kopieren](https://raw.githubusercontent.com/Mondroete/DSK---Makros/main/macros/Bilder/01-framework-uuid.png)
 
 **Schritt 4: Ahnengabe vorbereiten**  
 Wir nehmen uns nun die Ahnengabe (das Item) vor und fügen da das Makro ein.
 
-![Item – Effekt → Macro‑Feld](https://raw.githubusercontent.com/Mondroete/DSK---Makros/main/macros/Bilder/03-item-macro-field.png)
-
 *Bild 3: Öffne das Item → Reiter "Statuseffekte / Zustände" → Effekt wählen → Reiter "Erweitert". Trage hier das Macro als Link oder Skript ein.*
+
+![Item – Effekt → Macro‑Feld](https://raw.githubusercontent.com/Mondroete/DSK---Makros/main/macros/Bilder/03-item-macro-field.png)
 
 **Schritt 5: UUID für das Gaben-Makro austauschen**  
 Auch hier müssen wir die UUID austauschen, damit das Item exakt dein neu erstelltes Makro findet.
 
-![Gaben‑Macro – Macro‑UUID](https://raw.githubusercontent.com/Mondroete/DSK---Makros/main/macros/Bilder/02-gaben-macro-uuid.png)
-
 *Bild 2: Das Gaben-Macro als Script. Kopiere hier die UUID per Rechtsklick und füge sie als `macroLink` in das Item ein.*
+
+![Gaben‑Macro – Macro‑UUID](https://raw.githubusercontent.com/Mondroete/DSK---Makros/main/macros/Bilder/02-gaben-macro-uuid.png)
 
 ---
 
@@ -62,21 +62,26 @@ Um Zeit bei der Einrichtung zu sparen, können fertige Makros und Gaben auch dir
 Die folgende Bildfolge zeigt den Import beispielhaft an einem Makro. Wenn man stattdessen Gaben (Items) importieren möchte, funktioniert das auf exakt demselben Weg – man führt die Schritte dann einfach im Reiter für Gegenstände/Items aus.
 
 **Schritt 1: Makro- oder Item-Verzeichnis öffnen**
-![JSON Import Teil 1](https://raw.githubusercontent.com/Mondroete/DSK---Makros/main/macros/Bilder/josn-import_teil1.png)
 *Bild 4: Rechtsklick auf den Ordner oder das Element, in das importiert werden soll.*
 
+![JSON Import Teil 1](https://raw.githubusercontent.com/Mondroete/DSK---Makros/main/macros/Bilder/josn-import_teil1.png)
+
 **Schritt 2: Import-Option wählen**
-![JSON Import Teil 2](https://raw.githubusercontent.com/Mondroete/DSK---Makros/main/macros/Bilder/json-import-teil2.png)
 *Bild 5: Wähle im Kontextmenü die Option zum Importieren von Daten (Import Data).*
 
+![JSON Import Teil 2](https://raw.githubusercontent.com/Mondroete/DSK---Makros/main/macros/Bilder/json-import-teil2.png)
+
 **Schritt 3: JSON-Datei aussuchen**
-![JSON Import Teil 3](https://raw.githubusercontent.com/Mondroete/DSK---Makros/main/macros/Bilder/joson-import-teil3.png)
 *Bild 6: Klicke auf den Button zur Dateiauswahl und suche die heruntergeladene JSON-Datei auf deinem PC.*
 
+![JSON Import Teil 3](https://raw.githubusercontent.com/Mondroete/DSK---Makros/main/macros/Bilder/joson-import-teil3.png)
+
 **Schritt 4: Import bestätigen**
-![JSON Import Teil 4](https://raw.githubusercontent.com/Mondroete/DSK---Makros/main/macros/Bilder/json-import-teil4.png)
 *Bild 7: Bestätige den Dialog, um die Datei in Foundry hochzuladen.*
 
+![JSON Import Teil 4](https://raw.githubusercontent.com/Mondroete/DSK---Makros/main/macros/Bilder/json-import-teil4.png)
+
 **Schritt 5: Erfolgreicher Import**
-![JSON Import Teil 5](https://raw.githubusercontent.com/Mondroete/DSK---Makros/main/macros/Bilder/joson-import-teil5.png)
 *Bild 8: Das Makro bzw. das Item ist nun importiert. (Hinweis: Denke daran, anschließend trotzdem die UUIDs wie in Schritt 3 und 5 der Grundanleitung beschrieben an deine eigene Welt anzupassen).*
+
+![JSON Import Teil 5](https://raw.githubusercontent.com/Mondroete/DSK---Makros/main/macros/Bilder/joson-import-teil5.png)
