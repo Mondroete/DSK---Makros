@@ -51,3 +51,32 @@ es ist die Übersichtensammlung der Effekte, ein Baukasten aus dem sich ein Effe
 
 # Framework Wecker
 er dient dazu nach die effekte wieder zu überwachen, falls eine Runde mit laufenden Effekten beendet wurde.
+
+
+-----------------------------------------------------------------------------------------------------------------------
+
+
+# Erweiterung: Daten per JSON-Datei importieren
+Um Zeit bei der Einrichtung zu sparen, können fertige Makros und Gaben auch direkt als `.json`-Datei in Foundry VTT importiert werden. 
+
+Die folgende Bildfolge zeigt den Import beispielhaft an einem Makro. Wenn man stattdessen Gaben (Items) importieren möchte, funktioniert das auf exakt demselben Weg – man führt die Schritte dann einfach im Reiter für Gegenstände/Items aus.
+
+**Schritt 1: Makro- oder Item-Verzeichnis öffnen**
+![JSON Import Teil 1](https://raw.githubusercontent.com/Mondroete/DSK---Makros/main/macros/Bilder/josn-import_teil1.png)
+*Bild 4: Rechtsklick auf den Ordner oder das Element, in das importiert werden soll.*
+
+**Schritt 2: Import-Option wählen**
+![JSON Import Teil 2](https://raw.githubusercontent.com/Mondroete/DSK---Makros/main/macros/Bilder/json-import-teil2.png)
+*Bild 5: Wähle im Kontextmenü die Option zum Importieren von Daten (Import Data).*
+
+**Schritt 3: JSON-Datei aussuchen**
+![JSON Import Teil 3](https://raw.githubusercontent.com/Mondroete/DSK---Makros/main/macros/Bilder/joson-import-teil3.png)
+*Bild 6: Klicke auf den Button zur Dateiauswahl und suche die heruntergeladene JSON-Datei auf deinem PC.*
+
+**Schritt 4: Import bestätigen**
+![JSON Import Teil 4](https://raw.githubusercontent.com/Mondroete/DSK---Makros/main/macros/Bilder/json-import-teil4.png)
+*Bild 7: Bestätige den Dialog, um die Datei in Foundry hochzuladen.*
+
+**Schritt 5: Erfolgreicher Import**
+![JSON Import Teil 5](https://raw.githubusercontent.com/Mondroete/DSK---Makros/main/macros/Bilder/joson-import-teil5.png)
+*Bild 8: Das Makro bzw. das Item ist nun importiert. (Hinweis: Denke daran, anschließend trotzdem die UUIDs wie in Schritt 3 und 5 der Grundanleitung beschrieben an deine eigene Welt anzupassen).*
