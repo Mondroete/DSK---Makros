@@ -54,7 +54,7 @@
   "type": "ahnengabe",
   "system": {
     "description": {
-      "value": "<p>„Das Maunzen einer Mutter kann ihre Kinder wahrhaft überall erreichen.“</p><p>– Mutter Mika</p>",
+      "value": "<p>„Das Maunzen einer Mutter kann ihre Kinder wahrhaft überall erreichen.“</p><p>– Mutter Mika</p><p></p><hr /><p>Bitte Lege dir eine Allgemeine Sonderferkigkeit an</p><ul><li><p>sie muss Freunde und Verwandte heiße</p></li><li><p>hier hälst du all deine Freunde und Verwante mit den namen fest</p></li></ul>",
       "gminfo": ""
     },
     "characteristic1": "ch",
@@ -86,7 +86,7 @@
     "systemId": "dsk",
     "systemVersion": "4.2.8",
     "createdTime": 1788193874815,
-    "modifiedTime": 1788193874815,
+    "modifiedTime": 1788859718390,
     "lastModifiedBy": "9CRVH1u8nNgMxGRR"
   },
   "ownership": {

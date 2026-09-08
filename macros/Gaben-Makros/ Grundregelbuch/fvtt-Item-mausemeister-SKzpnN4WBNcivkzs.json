@@ -1,0 +1,96 @@
+{
+  "name": "Mäusemeister",
+  "img": "https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/DSK/Allgemein_Glaubenssymbole/Aphasma.webp",
+  "effects": [
+    {
+      "name": "Mäusemeister",
+      "img": "https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/DSK/Allgemein_Glaubenssymbole/Aphasma.webp",
+      "origin": "Actor.m4lI1pf9uG0ZHLTg.Item.sN516cwIvA3NpzJP",
+      "flags": {
+        "dsk": {
+          "value": null,
+          "description": "",
+          "auto": null,
+          "manual": 0,
+          "hideOnToken": false,
+          "hidePlayers": false,
+          "customDuration": "",
+          "advancedFunction": "2",
+          "resistRoll": "",
+          "args3": "// ==========================================\n        // ⚙️ KONFIGURATION: GABEN-DETAILS HIER EINTRAGEN\n        // ==========================================\n        const gabenName = \"Mäusemeister (Aphasma)\";\n        const aepKosten = 16;\n        const macroLink = \"@UUID[Compendium.dsk-havena-und-umland.makros.Macro.ZqRGlygccdrKw2R0]{Maus beschwören}\";\n        const iconBild = \"https://assets.forge-vtt.com/644fbc20a9e089e2ef894956/systems/dsk/icons/categories/ahnengabe.webp\";\n        // ==========================================\n        \n        (async () => {\n            if (typeof DSK === \"undefined\" || !globalThis.DSK) {\n                const fwMacro = await fromUuid(\"Compendium.dsk-havena-und-umland.makros.Macro.fHQ2OuDo3Fe3spBn\");\n                if (fwMacro) await fwMacro.execute();\n                await new Promise(resolve => setTimeout(resolve, 150)); \n            }\n        \n            if (typeof DSK === \"undefined\" && !globalThis.DSK) {\n                return ui.notifications.error(\"Luna sagt 🌙: Das DSK-Framework konnte nicht geladen werden!\");\n            }\n        \n            let wirkenderActor = null;\n            if (typeof actor !== \"undefined\" && actor) {\n                wirkenderActor = actor; \n            } else if (typeof testData !== \"undefined\" && testData && testData.speaker) {\n                wirkenderActor = game.actors.get(testData.speaker.actor);\n            }\n            if (!wirkenderActor) wirkenderActor = canvas.tokens.controlled[0]?.actor;\n            if (!wirkenderActor) wirkenderActor = game.user.character;\n        \n            if (!wirkenderActor) return ui.notifications.warn(\"Luna sagt 🌙: Ich konnte den Wirkenden nicht finden!\");\n            \n            const currentAeP = foundry.utils.getProperty(wirkenderActor, \"system.stats.AeP.value\") || 0;\n            let htmlInhalt = \"\";\n            let topHeader = \"\";\n        \n            if (currentAeP < aepKosten) {\n                topHeader = \"Fehlschlag\";\n                await wirkenderActor.update({ \"system.stats.AeP.value\": 0 });\n                \n                htmlInhalt = `\n                    <p style=\"margin-bottom: 8px;\"><b>${wirkenderActor.name}</b> hat versucht, die Gabe zu wirken.</p>\n                    <hr style=\"margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;\">\n                    <p style=\"margin-bottom: 8px; color: #8b0000;\"><b>Fehlschlag!</b> Die Kraft reicht nicht aus.</p>\n                    <p style=\"margin-bottom: 8px;\">Die restlichen <b>${currentAeP} AeP</b> wurden verbraucht, aber die Gabe schlägt fehl.</p>\n                `;\n            } else {\n                topHeader = \"Wirkungsbeginn\"; \n                let ermittelteQS = 1;\n                if (typeof testData !== \"undefined\") {\n                    ermittelteQS = Number(testData?.result?.QL || testData?.qualityStep || 1);\n                }\n                await wirkenderActor.setFlag(\"world\", \"letzteGabenQS\", ermittelteQS);\n                await wirkenderActor.update({ \"system.stats.AeP.value\": currentAeP - aepKosten });\n                \n                htmlInhalt = `\n                    <p style=\"margin-bottom: 8px;\"><b>${wirkenderActor.name}</b> hat die Gabe gewirkt.</p>\n                    <hr style=\"margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;\">\n                    <p style=\"margin-bottom: 8px; color: #76301b;\"><b>Kosten:</b> Die AeP in Höhe von <b>${aepKosten}</b> sind abgezogen worden.</p>\n                    <hr style=\"margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;\">\n                    <p style=\"margin-bottom: 8px;\">Bitte markiere <b>ein Ziel</b> und klicke hier:</p>\n                    <span style=\"font-size: 15px;\">${macroLink}</span>\n                `;\n            }\n            \n            const contentHtml = `\n                <div style=\"font-family: 'Signika', sans-serif;\">\n                    <div class=\"dskbox1\">\n                        <p style=\"display:flex; gap:8px; align-items:center; margin:0;\">\n                            <img src=\"${iconBild}\" style=\"width:28px; border:none; background:transparent;\">\n                            <b>${topHeader}</b>\n                        </p>\n                        <p style=\"font-weight:bold; margin-top:6px; margin-bottom:0;\">${gabenName}</p>\n                    </div>\n                    <div class=\"dskbox2\" style=\"margin-top:10px; text-align: center;\">\n                        ${htmlInhalt}\n                    </div>\n                </div>\n            `;\n            \n            await ChatMessage.create({ speaker: { alias: \"System\" }, content: contentHtml });\n        })();",
+          "onRemove": ""
+        }
+      },
+      "_id": "8eyMK28lydjqpIbF",
+      "type": "base",
+      "system": {},
+      "changes": [],
+      "disabled": false,
+      "duration": {
+        "startTime": null,
+        "combat": null,
+        "seconds": null,
+        "rounds": null,
+        "turns": null,
+        "startRound": null,
+        "startTurn": null
+      },
+      "description": "",
+      "tint": "#ffffff",
+      "transfer": true,
+      "statuses": [],
+      "sort": 0,
+      "_stats": {
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null,
+        "coreVersion": "13.351",
+        "systemId": "dsk",
+        "systemVersion": "4.2.8",
+        "lastModifiedBy": "9CRVH1u8nNgMxGRR",
+        "modifiedTime": 1788860925957
+      }
+    }
+  ],
+  "type": "ahnengabe",
+  "system": {
+    "description": {
+      "value": "<p>„Hat er es verdient? Dann zeig ihm, was es bedeutet, ein Aphasmakind zu verärgern. Mache ihn zu dem, was er ist: nur eine Maus.“</p><p>– Kara Federglanz</p>",
+      "gminfo": ""
+    },
+    "characteristic1": "kl",
+    "characteristic2": "ko",
+    "effect": "Mit dieser Ahnengabe wird ein Tier oder ein Erwachter der Größenkategorie mittel oder kleiner in eine Maus verwandelt. Dies ist nur möglich, wenn das Wesen mindestens so groß und so schwer wie eine Maus ist. Das Ziel behält einen kleinen Teil seiner geistigen Fähigkeiten und Erinnerungen, übernimmt jedoch die körperlichen Fähigkeiten einer Maus (siehe Bestiarium, Seite 200). Fehlen dem Ziel Lebenspunkte, besitzt auch die Maus anteilig weniger Lebenspunkte.",
+    "effectFormula": "",
+    "duration": "QS Minuten",
+    "AeP": "16",
+    "distribution": "Aphasma (Schicksal)",
+    "StF": "C",
+    "targetCategory": "Tiere, Erwachte",
+    "range": "Berührung",
+    "level": 0,
+    "resist": "zk"
+  },
+  "folder": "Bfgy2Rjd3j1lTvPi",
+  "flags": {},
+  "_stats": {
+    "compendiumSource": "Item.jqA52Y1zZH0BHam3",
+    "duplicateSource": null,
+    "exportSource": {
+      "worldId": "dsk-zum-erstellen",
+      "uuid": "Item.SKzpnN4WBNcivkzs",
+      "coreVersion": "13.351",
+      "systemId": "dsk",
+      "systemVersion": "4.2.8"
+    },
+    "coreVersion": "13.351",
+    "systemId": "dsk",
+    "systemVersion": "4.2.8",
+    "createdTime": 1788179140307,
+    "modifiedTime": 1788179140307,
+    "lastModifiedBy": "9CRVH1u8nNgMxGRR"
+  },
+  "ownership": {
+    "default": 0
+  }
+}
