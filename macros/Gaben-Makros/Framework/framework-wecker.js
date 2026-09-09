@@ -1,7 +1,12 @@
 // ==========================================
-// 🌙 LUNAS WECKER (Bibliothekar, Passiv-Scanner & Staubsauger)
+// 🌙 LUNAS WECKER (Der einmalige Reaktivator)
 // ==========================================
 (async () => {
+    // 🚩 LUNAS SCHLAFMODUS: Der Wecker darf pro Sitzung nur EINMAL klingeln!
+    if (globalThis._lunasWeckerGeklingelt) {
+        return ui.notifications.info("Luna sagt 🌙: Pssst! Der Wecker schläft bereits. Er hat alle Gaben für diese Sitzung schon reaktiviert!");
+    }
+
     // --- 1. FRAMEWORK WECKEN ---
     const fwMacro = await fromUuid("Compendium.dsk-havena-und-umland.makros.Macro.fHQ2OuDo3Fe3spBn");
     if (fwMacro) await fwMacro.execute();
@@ -26,14 +31,22 @@
     for (let actor of alleAkteure) {
         for (let effect of actor.effects) {
             const eName = effect.name || effect.label || "";
-            
-            // 🐾 LUNAS PASSIV-SCANNER: Verhindert die mehrfachen Nachrichten!
-            if (eName.includes("Tote erwecken") && (eName.includes("Kontrolle") || eName.includes("Katzendiener"))) {
-                reaktivierteGaben.add(eName + " <span style='font-size: 0.85em; opacity: 0.7;'>(System-aktiv)</span>");
-                continue; // 🚩 WICHTIG: Das bricht hier ab! Keine Ende-Nachricht wird registriert!
+            if (!eName.includes("(")) continue;
+
+            // 🚩 LUNAS FILTER: Exakte Namens-Anpassung an das Ausführungs-Makro!
+            if (eName.includes("Tote erwecken")) {
+                if (eName.includes("Katzendiener")) {
+                    reaktivierteGaben.add(eName + " <span style='font-size: 0.85em; opacity: 0.7;'>(Ignoriert für Chat)</span>");
+                    continue; 
+                }
+                if (eName.includes("Kontrolle")) {
+                    reaktivierteGaben.add(eName);
+                    const ahne = effect.getFlag("dsk", "ahne") || "Brona";
+                    DSK_FW.EffektEnde.Register(effect.id, `Tote erwecken (${ahne})`, "Die Bindung zum untoten Diener ist gerissen. Der Körper fällt leblos zu Boden und die maximalen AeP des Beschwörers sind wiederhergestellt.");
+                    continue; 
+                }
             }
 
-            if (!eName.includes("(")) continue;
             const basisName = eName.split("(")[0].trim();
 
             // --- 4. MAKRO IM KOMPENDIUM SUCHEN ---
@@ -53,7 +66,6 @@
                 if (!globalThis._lunasSicherheitsNetz) {
                     globalThis._lunasSicherheitsNetz = true;
 
-                    // 🧹 1. UNIVERSALLER ITEM-STAUBSAUGER
                     Hooks.on("preDeleteActiveEffect", async (eff) => {
                         if (!game.user.isGM || !eff.parent) return;
                         const effName = eff.name || eff.label || "";
@@ -66,9 +78,9 @@
                         }
                     });
 
-                    // 🔴 2. ROTER SCHIMMER: WILLENSKRAFT-WÄCHTER
                     Hooks.on("createChatMessage", async (msg) => {
-                        if (msg.author.id !== game.user.id) return; // 🚩 V12 Fix!
+                        if (msg.author && msg.author.id !== game.user.id) return;
+                        if (msg.user && msg.user.id !== game.user.id) return; // V12 Fallback
                         const content = (msg.content || "").toLowerCase();
                         const flavor = (msg.flavor || "").toLowerCase();
                         
@@ -109,7 +121,6 @@
                         }
                     });
 
-                    // 🦇 3. FLEDERMAUS-SYNC
                     Hooks.on("updateActor", async (updatedActor, changes, options) => {
                         if (!game.user.isGM || options.dskFledermausSync) return; 
                         const lepChange = foundry.utils.getProperty(changes, "system.stats.LeP.value");
@@ -156,7 +167,6 @@
                         }
                     });
 
-                    // 🐁 4. MAUS-SYNC
                     Hooks.on("updateActor", async (updatedActor, changes, options) => {
                         if (!game.user.isGM || options.dskMausSync) return; 
                         const lepChange = foundry.utils.getProperty(changes, "system.stats.LeP.value");
@@ -203,26 +213,22 @@
                         }
                     });
 
-                    // 🗑️ 5. ZENTRALER LÖSCH-WÄCHTER 
                     Hooks.on("deleteActiveEffect", async (eff) => {
                         if (!game.user.isGM) return; 
                         const effName = eff.name || eff.label || "";
 
-                        // 🔴 A) SCHABLONEN-STAUBSAUGER
                         const tId = eff.getFlag("dsk", "templateId");
                         if (tId && canvas.scene) {
                             const doc = canvas.scene.templates.get(tId);
                             if (doc) await doc.delete();
                         }
 
-                        // 👻 B) AKTEUR-STAUBSAUGER
                         const summonedActorId = eff.getFlag("dsk", "summonedActorId");
                         if (summonedActorId) {
                             const sActor = game.actors.get(summonedActorId);
                             if (sActor) await sActor.delete();
                         }
 
-                        // 🔴 C) ROTER SCHIMMER
                         if (effName.includes("Roter Schimmer") && !effName.includes("Jagdfieber") && eff.parent) {
                             const casterUuid = eff.parent.uuid;
                             for (let t of canvas.tokens.placeables) {
@@ -240,7 +246,6 @@
                             }
                         }
 
-                        // 🦇 D) FLEDERMAUSLEIB CLEANUP
                         if (effName.includes("Fledermausleib")) {
                             const actorUuid = eff.parent?.uuid;
                             if (!actorUuid) return;
@@ -272,7 +277,6 @@
                             if (bats.length > 0) await canvas.scene.deleteEmbeddedDocuments("Token", bats.map(t => t.id));
                         }
 
-                        // 🐁 E) MÄUSEMEISTER CLEANUP
                         if (effName.includes("Mäusemeister")) {
                             const actorUuid = eff.parent?.uuid;
                             if (!actorUuid) return;
@@ -303,11 +307,34 @@
                             }
                             if (mice.length > 0) await canvas.scene.deleteEmbeddedDocuments("Token", mice.map(t => t.id));
                         }
+
+                        // 💀 LUNAS ZIEL-SYNC: Löscht stumm den Partner, überlässt den Chat dem Framework!
+                        if (effName.includes("Tote erwecken")) {
+                            const casterUuid = eff.getFlag("dsk", "sourceCasterUuid");
+                            const targetUuid = eff.getFlag("dsk", "targetUuid");
+
+                            if (effName.includes("Kontrolle") && targetUuid) {
+                                const tActor = await fromUuid(targetUuid);
+                                if (tActor) {
+                                    const paired = tActor.effects.filter(e => (e.name||e.label).includes("Katzendiener") && e.getFlag("dsk", "sourceCasterUuid") === eff.parent.uuid);
+                                    if (paired.length > 0) setTimeout(async () => { await tActor.deleteEmbeddedDocuments("ActiveEffect", paired.map(e=>e.id)); }, 100);
+                                }
+                            } else if (effName.includes("Katzendiener") && casterUuid) {
+                                const cActor = await fromUuid(casterUuid);
+                                if (cActor) {
+                                    const paired = cActor.effects.filter(e => (e.name||e.label).includes("Kontrolle") && e.getFlag("dsk", "targetUuid") === eff.parent.uuid);
+                                    if (paired.length > 0) setTimeout(async () => { await cActor.deleteEmbeddedDocuments("ActiveEffect", paired.map(e=>e.id)); }, 100);
+                                }
+                            }
+                        }
                     });
                 }
             }
         }
     }
+
+    // 🚩 Den Wecker nach getaner Arbeit schlafen legen
+    globalThis._lunasWeckerGeklingelt = true;
 
     // --- 6. CHAT-AUSGABE BAUEN ---
     let statusText = "";
@@ -315,7 +342,7 @@
         const effekteListe = Array.from(reaktivierteGaben).map(e => `<li style="margin-bottom:4px;"><b>${e}</b></li>`).join("");
         statusText = `
             <p style="color: #18940F; font-weight: bold; margin-bottom: 8px; text-align: left;">Scanner erfolgreich!</p>
-            <p style="margin-bottom: 6px; text-align: left;">Der Wecker hat das System durchleuchtet und folgende aktive Gaben gefunden:</p>
+            <p style="margin-bottom: 6px; text-align: left;">Der Wecker hat das System durchleuchtet und folgende aktive Gaben an das Framework übergeben:</p>
             <ul class="dsklist" style="margin-top: 0; margin-bottom: 0; text-align: left;">
                 ${effekteListe}
             </ul>
@@ -323,7 +350,7 @@
     } else {
         statusText = `
             <p style="color: #76301b; font-weight: bold; margin-bottom: 8px; text-align: left;">Scanner abgeschlossen.</p>
-            <p style="margin-bottom: 0; text-align: left;">Es wurden aktuell keine aktiven Gaben auf den Akteuren gefunden.</p>
+            <p style="margin-bottom: 0; text-align: left;">Es wurden aktuell keine anmeldbaren Gaben auf den Akteuren gefunden.</p>
         `;
     }
 
