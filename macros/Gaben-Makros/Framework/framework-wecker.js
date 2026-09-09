@@ -1,5 +1,5 @@
 // ==========================================
-// 🌙 LUNAS WECKER (Bibliothekar, Item- & Schablonen-Staubsauger)
+// 🌙 LUNAS WECKER (Bibliothekar, Item-, Schablonen- & Akteur-Staubsauger)
 // ==========================================
 (async () => {
     // --- 1. FRAMEWORK WECKEN ---
@@ -26,9 +26,7 @@
     for (let actor of alleAkteure) {
         for (let effect of actor.effects) {
             const eName = effect.name || effect.label || "";
-            
             if (!eName.includes("(")) continue;
-
             const basisName = eName.split("(")[0].trim();
 
             // --- 4. MAKRO IM KOMPENDIUM SUCHEN ---
@@ -39,13 +37,12 @@
                 reaktivierteGaben.add(eName);
                 
                 const codeText = macro.command; 
-
                 const match = codeText.match(/EffektEnde\.Register\s*\(\s*[^,]+,\s*[^,]+,\s*(["'`])(.*?)\1\s*\)/);
                 const beschreibung = match ? match[2] : `Die Kraft von ${eName} verblasst.`;
 
                 DSK_FW.EffektEnde.Register(effect.id, eName, beschreibung);
 
-                // --- 5. SICHERHEITSNETZE & WÄCHTER (Live-Sync, Schablonen, Items) ---
+                // --- 5. SICHERHEITSNETZE & WÄCHTER ---
                 if (!globalThis._lunasSicherheitsNetz) {
                     globalThis._lunasSicherheitsNetz = true;
 
@@ -53,15 +50,12 @@
                     Hooks.on("preDeleteActiveEffect", async (eff) => {
                         if (!game.user.isGM || !eff.parent) return;
                         const effName = eff.name || eff.label || "";
-                        
                         const ahnenListe = ["Aphasma", "Nurti", "Zerzal", "Brona", "Rondra", "Faris", "Zirraku", "Bishdariel", "Numinoru", "Zsahh"];
                         const isGabe = ahnenListe.some(ahne => effName.includes(`(${ahne})`));
 
                         if (isGabe) {
                             const linkedItem = eff.parent.items.find(i => i.name === effName);
-                            if (linkedItem) {
-                                await linkedItem.delete();
-                            }
+                            if (linkedItem) await linkedItem.delete();
                         }
                     });
 
@@ -202,19 +196,26 @@
                         }
                     });
 
-                    // 🗑️ 5. ZENTRALER LÖSCH-WÄCHTER (Schablonen, Fledermaus, Maus, Jagdfieber)
+                    // 🗑️ 5. ZENTRALER LÖSCH-WÄCHTER (Schablonen, Akteure, Fledermaus, Maus, Jagdfieber)
                     Hooks.on("deleteActiveEffect", async (eff) => {
                         if (!game.user.isGM) return; 
                         const effName = eff.name || eff.label || "";
 
-                        // 🔴 A) UNIVERSALLER SCHABLONEN-STAUBSAUGER
+                        // 🔴 A) SCHABLONEN-STAUBSAUGER
                         const tId = eff.getFlag("dsk", "templateId");
                         if (tId && canvas.scene) {
                             const doc = canvas.scene.templates.get(tId);
                             if (doc) await doc.delete();
                         }
 
-                        // 🔴 B) ROTER SCHIMMER (Jagdfieber von Zielen entfernen)
+                        // 👻 B) AKTEUR-STAUBSAUGER (Für temporäre Geisterdiener etc.)
+                        const summonedActorId = eff.getFlag("dsk", "summonedActorId");
+                        if (summonedActorId) {
+                            const sActor = game.actors.get(summonedActorId);
+                            if (sActor) await sActor.delete();
+                        }
+
+                        // 🔴 C) ROTER SCHIMMER (Jagdfieber von Zielen entfernen)
                         if (effName.includes("Roter Schimmer") && !effName.includes("Jagdfieber") && eff.parent) {
                             const casterUuid = eff.parent.uuid;
                             for (let t of canvas.tokens.placeables) {
@@ -232,7 +233,7 @@
                             }
                         }
 
-                        // 🦇 C) FLEDERMAUSLEIB CLEANUP
+                        // 🦇 D) FLEDERMAUSLEIB CLEANUP
                         if (effName.includes("Fledermausleib")) {
                             const actorUuid = eff.parent?.uuid;
                             if (!actorUuid) return;
@@ -264,7 +265,7 @@
                             if (bats.length > 0) await canvas.scene.deleteEmbeddedDocuments("Token", bats.map(t => t.id));
                         }
 
-                        // 🐁 D) MÄUSEMEISTER CLEANUP
+                        // 🐁 E) MÄUSEMEISTER CLEANUP
                         if (effName.includes("Mäusemeister")) {
                             const actorUuid = eff.parent?.uuid;
                             if (!actorUuid) return;
