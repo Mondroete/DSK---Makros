@@ -1,5 +1,5 @@
 // ==========================================
-// 🌙 LUNAS WECKER (Der Kompendium-Bibliothekar & Item-Staubsauger)
+// 🌙 LUNAS WECKER (Bibliothekar, Item- & Schablonen-Staubsauger)
 // ==========================================
 (async () => {
     // --- 1. FRAMEWORK WECKEN ---
@@ -45,11 +45,11 @@
 
                 DSK_FW.EffektEnde.Register(effect.id, eName, beschreibung);
 
-                // --- 5. SICHERHEITSNETZE & WÄCHTER (Live-Sync & Item-Cleanup) ---
+                // --- 5. SICHERHEITSNETZE & WÄCHTER (Live-Sync, Schablonen, Items) ---
                 if (!globalThis._lunasSicherheitsNetz) {
                     globalThis._lunasSicherheitsNetz = true;
 
-                    // 🧹 UNIVERSALLER ITEM-STAUBSAUGER (z.B. für Geisterfreund)
+                    // 🧹 1. UNIVERSALLER ITEM-STAUBSAUGER (z.B. für Geisterfreund)
                     Hooks.on("preDeleteActiveEffect", async (eff) => {
                         if (!game.user.isGM || !eff.parent) return;
                         const effName = eff.name || eff.label || "";
@@ -58,7 +58,6 @@
                         const isGabe = ahnenListe.some(ahne => effName.includes(`(${ahne})`));
 
                         if (isGabe) {
-                            // Sucht ein Item/Sonderfertigkeit mit EXAKT demselben Namen wie der Effekt
                             const linkedItem = eff.parent.items.find(i => i.name === effName);
                             if (linkedItem) {
                                 await linkedItem.delete();
@@ -66,7 +65,50 @@
                         }
                     });
 
-                    // 🦇 FLEDERMAUS-SYNC
+                    // 🔴 2. ROTER SCHIMMER: WILLENSKRAFT-WÄCHTER (Blockiert Würfe bei Jagdfieber)
+                    Hooks.on("createChatMessage", async (msg) => {
+                        if (msg.user.id !== game.user.id) return;
+                        const content = (msg.content || "").toLowerCase();
+                        const flavor = (msg.flavor || "").toLowerCase();
+                        
+                        if (content.includes("willenskraft") || flavor.includes("willenskraft")) {
+                            const speaker = msg.speaker;
+                            let rollActor = game.actors.get(speaker.actor);
+                            if (!rollActor && speaker.token) rollActor = canvas.scene.tokens.get(speaker.token)?.actor;
+                            if (!rollActor) return;
+                            
+                            const hatJagdfieberEffekt = rollActor.effects.some(e => {
+                                const n = (e.name || e.label || "").toLowerCase();
+                                return n.includes("roter schimmer") && n.includes("jagdfieber");
+                            });
+                            
+                            if (hatJagdfieberEffekt) {
+                                const hatJagdfieberEigenschaft = rollActor.items.some(i => (i.name || "").toLowerCase().includes("jagdfieber"));
+                                if (hatJagdfieberEigenschaft) {
+                                    const getOwners = (act) => Object.entries(act?.ownership || {}).filter(([id, lvl]) => lvl === 3 && id !== "default").map(([id]) => id);
+                                    let whisperTargets = [...new Set([...game.users.filter(u => u.isGM).map(u => u.id), ...getOwners(rollActor)])].filter(id => game.users.get(id));
+                                    await ChatMessage.create({
+                                        whisper: whisperTargets, speaker: { alias: "System" },
+                                        content: `
+                                            <div style="font-family: 'Signika', sans-serif;">
+                                                <div class="dskbox1">
+                                                    <p style="font-weight:bold; margin-top:6px; margin-bottom:0;">Jagdfieber blockiert Probe!</p>
+                                                </div>
+                                                <div class="dskbox2" style="margin-top:10px; text-align: center;">
+                                                    <p style="color:#000; font-weight:bold; font-size:1.1em;">${rollActor.name}</p>
+                                                    <hr style="margin: 8px 0; border: 0; border-top: 1px solid #c9bca6;">
+                                                    <p style="margin-bottom: 8px;">Da das Ziel unter dem Einfluss des <b>Roten Schimmers</b> steht und die Eigenschaft <b>Jagdfieber</b> besitzt, wird der Instinkt übermächtig!</p>
+                                                    <p style="color:#8b0000; font-weight:bold;">Die Probe darf nicht abgelegt werden und gilt als automatisch gescheitert.</p>
+                                                </div>
+                                            </div>
+                                        `
+                                    });
+                                }
+                            }
+                        }
+                    });
+
+                    // 🦇 3. FLEDERMAUS-SYNC
                     Hooks.on("updateActor", async (updatedActor, changes, options) => {
                         if (!game.user.isGM || options.dskFledermausSync) return; 
                         const lepChange = foundry.utils.getProperty(changes, "system.stats.LeP.value");
@@ -113,7 +155,7 @@
                         }
                     });
 
-                    // 🐁 MAUS-SYNC
+                    // 🐁 4. MAUS-SYNC
                     Hooks.on("updateActor", async (updatedActor, changes, options) => {
                         if (!game.user.isGM || options.dskMausSync) return; 
                         const lepChange = foundry.utils.getProperty(changes, "system.stats.LeP.value");
@@ -160,11 +202,37 @@
                         }
                     });
 
-                    // 🐾 TIER-CLEANUP (Löscht Token & stellt Sichtbarkeit her)
+                    // 🗑️ 5. ZENTRALER LÖSCH-WÄCHTER (Schablonen, Fledermaus, Maus, Jagdfieber)
                     Hooks.on("deleteActiveEffect", async (eff) => {
                         if (!game.user.isGM) return; 
                         const effName = eff.name || eff.label || "";
 
+                        // 🔴 A) UNIVERSALLER SCHABLONEN-STAUBSAUGER
+                        const tId = eff.getFlag("dsk", "templateId");
+                        if (tId && canvas.scene) {
+                            const doc = canvas.scene.templates.get(tId);
+                            if (doc) await doc.delete();
+                        }
+
+                        // 🔴 B) ROTER SCHIMMER (Jagdfieber von Zielen entfernen)
+                        if (effName.includes("Roter Schimmer") && !effName.includes("Jagdfieber") && eff.parent) {
+                            const casterUuid = eff.parent.uuid;
+                            for (let t of canvas.tokens.placeables) {
+                                if (!t.actor) continue;
+                                const toDelete = t.actor.effects.filter(e => {
+                                    const n = e.name || e.label || "";
+                                    return n.includes("Roter Schimmer") && n.includes("Jagdfieber") && e.getFlag("dsk", "sourceCasterUuid") === casterUuid;
+                                }).map(e => e.id);
+                                
+                                if (toDelete.length > 0) {
+                                    setTimeout(async () => {
+                                        await t.actor.deleteEmbeddedDocuments("ActiveEffect", toDelete);
+                                    }, 100);
+                                }
+                            }
+                        }
+
+                        // 🦇 C) FLEDERMAUSLEIB CLEANUP
                         if (effName.includes("Fledermausleib")) {
                             const actorUuid = eff.parent?.uuid;
                             if (!actorUuid) return;
@@ -196,6 +264,7 @@
                             if (bats.length > 0) await canvas.scene.deleteEmbeddedDocuments("Token", bats.map(t => t.id));
                         }
 
+                        // 🐁 D) MÄUSEMEISTER CLEANUP
                         if (effName.includes("Mäusemeister")) {
                             const actorUuid = eff.parent?.uuid;
                             if (!actorUuid) return;
