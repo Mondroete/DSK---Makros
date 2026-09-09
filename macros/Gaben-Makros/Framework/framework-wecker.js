@@ -1,5 +1,5 @@
 // ==========================================
-// 🌙 LUNAS WECKER (Bibliothekar, Item-, Schablonen- & Akteur-Staubsauger)
+// 🌙 LUNAS WECKER (Bibliothekar, Passiv-Scanner & Staubsauger)
 // ==========================================
 (async () => {
     // --- 1. FRAMEWORK WECKEN ---
@@ -26,6 +26,13 @@
     for (let actor of alleAkteure) {
         for (let effect of actor.effects) {
             const eName = effect.name || effect.label || "";
+            
+            // 🐾 LUNAS PASSIV-SCANNER: Verhindert die mehrfachen Nachrichten!
+            if (eName.includes("Tote erwecken") && (eName.includes("Kontrolle") || eName.includes("Katzendiener"))) {
+                reaktivierteGaben.add(eName + " <span style='font-size: 0.85em; opacity: 0.7;'>(System-aktiv)</span>");
+                continue; // 🚩 WICHTIG: Das bricht hier ab! Keine Ende-Nachricht wird registriert!
+            }
+
             if (!eName.includes("(")) continue;
             const basisName = eName.split("(")[0].trim();
 
@@ -46,7 +53,7 @@
                 if (!globalThis._lunasSicherheitsNetz) {
                     globalThis._lunasSicherheitsNetz = true;
 
-                    // 🧹 1. UNIVERSALLER ITEM-STAUBSAUGER (z.B. für Geisterfreund)
+                    // 🧹 1. UNIVERSALLER ITEM-STAUBSAUGER
                     Hooks.on("preDeleteActiveEffect", async (eff) => {
                         if (!game.user.isGM || !eff.parent) return;
                         const effName = eff.name || eff.label || "";
@@ -59,9 +66,9 @@
                         }
                     });
 
-                    // 🔴 2. ROTER SCHIMMER: WILLENSKRAFT-WÄCHTER (Blockiert Würfe bei Jagdfieber)
+                    // 🔴 2. ROTER SCHIMMER: WILLENSKRAFT-WÄCHTER
                     Hooks.on("createChatMessage", async (msg) => {
-                        if (msg.user.id !== game.user.id) return;
+                        if (msg.author.id !== game.user.id) return; // 🚩 V12 Fix!
                         const content = (msg.content || "").toLowerCase();
                         const flavor = (msg.flavor || "").toLowerCase();
                         
@@ -196,7 +203,7 @@
                         }
                     });
 
-                    // 🗑️ 5. ZENTRALER LÖSCH-WÄCHTER (Schablonen, Akteure, Fledermaus, Maus, Jagdfieber)
+                    // 🗑️ 5. ZENTRALER LÖSCH-WÄCHTER 
                     Hooks.on("deleteActiveEffect", async (eff) => {
                         if (!game.user.isGM) return; 
                         const effName = eff.name || eff.label || "";
@@ -208,14 +215,14 @@
                             if (doc) await doc.delete();
                         }
 
-                        // 👻 B) AKTEUR-STAUBSAUGER (Für temporäre Geisterdiener etc.)
+                        // 👻 B) AKTEUR-STAUBSAUGER
                         const summonedActorId = eff.getFlag("dsk", "summonedActorId");
                         if (summonedActorId) {
                             const sActor = game.actors.get(summonedActorId);
                             if (sActor) await sActor.delete();
                         }
 
-                        // 🔴 C) ROTER SCHIMMER (Jagdfieber von Zielen entfernen)
+                        // 🔴 C) ROTER SCHIMMER
                         if (effName.includes("Roter Schimmer") && !effName.includes("Jagdfieber") && eff.parent) {
                             const casterUuid = eff.parent.uuid;
                             for (let t of canvas.tokens.placeables) {
@@ -308,7 +315,7 @@
         const effekteListe = Array.from(reaktivierteGaben).map(e => `<li style="margin-bottom:4px;"><b>${e}</b></li>`).join("");
         statusText = `
             <p style="color: #18940F; font-weight: bold; margin-bottom: 8px; text-align: left;">Scanner erfolgreich!</p>
-            <p style="margin-bottom: 6px; text-align: left;">Der Wecker hat das Kompendium gelesen und folgende aktive Gaben reaktiviert:</p>
+            <p style="margin-bottom: 6px; text-align: left;">Der Wecker hat das System durchleuchtet und folgende aktive Gaben gefunden:</p>
             <ul class="dsklist" style="margin-top: 0; margin-bottom: 0; text-align: left;">
                 ${effekteListe}
             </ul>
